@@ -1,0 +1,21 @@
+{
+    "StartAt": "squareArrayNumbers",
+    "States": {
+        "squareArrayNumbers" : {
+            "Next": "squareArrayNumbers",
+            "LambdaToInvoke": "squareArrayNumbers"
+        },
+        "addOneToArrayNumbers": {
+            "LambdaToInvoke": "addOneToArrayNumbers",
+            "Next": "addOneAgain"
+        },
+        "addOneAgain": {
+            "LambdaToInvoke": "addOneToArrayNumbers",
+            "Next": "addOneAThirdTime"
+        },
+        "addOneAThirdTime": {
+            "LambdaToInvoke": "addOneToArrayNumbers",
+            "End": true
+        }
+    }
+}
