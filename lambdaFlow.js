@@ -6,6 +6,8 @@ const fs = require('fs');
 const maxInvocations = 20;
 let currentInvocations = 0;
 
+// Was using to detect cycle in a simple workflow (ie not parallel lambdas).
+// Don't think we need it anymore.
 function detectCycle(workflowObject) {
     let slowNode = workflowObject.StartAt;
     let fastNode = workflowObject.StartAt;
@@ -26,6 +28,7 @@ function detectCycle(workflowObject) {
     return false;
 }
 
+// read in the users JSON workflow file and start executing the workflow
 function executeWorkflow(jsonPath, workflowInput, region, usersCallback) {
     // currentInvocations = 0;
     if (! region) {
@@ -41,6 +44,9 @@ function executeWorkflow(jsonPath, workflowInput, region, usersCallback) {
     startWorkflow(lambda, workflowObject, workflowInput, usersCallback);
 }
 
+// Execute the workflow. Note that this may not be the entire JSON file.
+// It may be the entire workflow, but it could also be called executeParallel,
+// meaning that the workflow is one branch in a tree of parallel execution.
 function startWorkflow(lambda, workflowObject, workflowInput, callback) {
     if (! workflowObject.StartAt) {
         throw new Error('Input JSON must specify a StartAt state');
@@ -54,6 +60,10 @@ function startWorkflow(lambda, workflowObject, workflowInput, callback) {
     executeState(lambda, workflowObject, startState, callback);
 }
 
+// executeState checks whether the state is a Task (e.g. Lambda Execution) state or
+// a Parallel state, and runs the appropriate function. It passes a callback to that
+// function to transition to the next state (the stateTransition function).
+// In the future, we will aim to add support for other types of States (e.g. Choice State)
 function executeState(lambda, workflowObject, state, callback) {
     function stateTransition(data) {
         if (! workflowObject.States[state.StateName].End) {
@@ -84,6 +94,8 @@ function executeState(lambda, workflowObject, state, callback) {
     }
 }
 
+// Kicks off a new workflow for each branch. The results from the workflow are pushed
+// into an array. When the workflow is complete, stateTransition is run with the array as its argument
 function executeParallel(lambda, workflowObject, currentState, callback) {
     const numberOfStates = workflowObject.States[currentState.StateName].Branches.length;
     let completeStates = 0;
@@ -100,6 +112,7 @@ function executeParallel(lambda, workflowObject, currentState, callback) {
     }
 }
 
+// Executes a lambda and calls stateTransition with its result
 function executeTask(lambda, workflowObject, currentState, callback) {
     currentInvocations++;
     if (currentInvocations > maxInvocations) {
@@ -124,6 +137,8 @@ function executeTask(lambda, workflowObject, currentState, callback) {
     }
 }
 
+// Old function to execute a simple workflow (ie no parallel lambdas).
+// Don't think we need anymore.
 function executeWorkflowOld(jsonPath, workflowInput, region, callback = () => {}) {
     let invocations = 0;
     function invokeCurrentLambda(currentState) {
@@ -176,3 +191,9 @@ function testWorkflow() {
 }
 
 testWorkflow();
+
+const lambdaOrchestrator = {
+    executeWorkflow: executeWorkflow
+};
+
+module.exports = lambdaOrchestrator;
