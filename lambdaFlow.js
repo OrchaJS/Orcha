@@ -1,32 +1,9 @@
 "use strict";
 
 const AWS = require('aws-sdk');
-const fs = require('fs');
 
 const maxInvocations = 20;
 let currentInvocations = 0;
-
-// Was using to detect cycle in a simple workflow (ie not parallel lambdas).
-// Don't think we need it anymore.
-function detectCycle(workflowObject) {
-    let slowNode = workflowObject.StartAt;
-    let fastNode = workflowObject.StartAt;
-    while (true) {
-        slowNode = workflowObject.States[slowNode].Next;
-        fastNode = workflowObject.States[fastNode].Next;
-        if ((! slowNode) || (! fastNode)) {
-            return false;
-        }
-        fastNode = workflowObject.States[fastNode].Next;
-        if ((! fastNode)) {
-            return false;
-        }
-        if (slowNode === fastNode) {
-            return true;
-        }
-    }
-    return false;
-}
 
 // read in the users JSON workflow file and start executing the workflow
 function executeWorkflow(jsonPath, workflowInput, region, usersCallback) {
@@ -38,16 +15,16 @@ function executeWorkflow(jsonPath, workflowInput, region, usersCallback) {
         throw new Error('Please specify a callback function.');
     }
     AWS.config.update({region: region});
-    const lambda = new AWS.Lambda();
+    const awsLambdaController = new AWS.Lambda();
     const workflowObject = JSON.parse(fs.readFileSync(jsonPath));
 
-    startWorkflow(lambda, workflowObject, workflowInput, usersCallback);
+    startWorkflow(awsLambdaController, workflowObject, workflowInput, usersCallback);
 }
 
 // Execute the workflow. Note that this may not be the entire JSON file.
-// It may be the entire workflow, but it could also be called executeParallel,
+// It may be the entire workflow, but it could also be called by executeParallel,
 // meaning that the workflow is one branch in a tree of parallel execution.
-function startWorkflow(lambda, workflowObject, workflowInput, callback) {
+function startWorkflow(awsLambdaController, workflowObject, workflowInput, callback) {
     if (! workflowObject.StartAt) {
         throw new Error('Input JSON must specify a StartAt state');
     }
@@ -57,21 +34,21 @@ function startWorkflow(lambda, workflowObject, workflowInput, callback) {
         StateData: workflowInput
     };
 
-    executeState(lambda, workflowObject, startState, callback);
+    executeState(awsLambdaController, workflowObject, startState, callback);
 }
 
 // executeState checks whether the state is a Task (e.g. Lambda Execution) state or
 // a Parallel state, and runs the appropriate function. It passes a callback to that
 // function to transition to the next state (the stateTransition function).
 // In the future, we will aim to add support for other types of States (e.g. Choice State)
-function executeState(lambda, workflowObject, state, callback) {
+function executeState(awsLambdaController, workflowObject, state, callback) {
     function stateTransition(data) {
         if (! workflowObject.States[state.StateName].End) {
             const nextState = {
                 StateName: workflowObject.States[state.StateName].Next,
                 StateData: data
             };
-            executeState(lambda, workflowObject, nextState, callback);
+            executeState(awsLambdaController, workflowObject, nextState, callback);
         }
         else {
             callback(data);
@@ -84,10 +61,16 @@ function executeState(lambda, workflowObject, state, callback) {
     workflowObject.States[state.StateName].Visited = true;
     switch (workflowObject.States[state.StateName].Type) {
         case "Task":
-            executeTask(lambda, workflowObject, state, stateTransition);
+            executeTask(awsLambdaController, workflowObject, state, stateTransition);
             break;
         case "Parallel":
-            executeParallel(lambda, workflowObject, state, stateTransition);
+            executeParallel(awsLambdaController, workflowObject, state, stateTransition);
+            break;
+        case "Choice":
+            executeState(awsLambdaController, workflowObject, executeChoice(workflowObject, state), callback);
+            break;
+        case "Succeed":
+            callback(state.StateData);
             break;
         default:
             throw new Error(`State type for ${state.StateName} missing or incorrect`);
@@ -96,24 +79,24 @@ function executeState(lambda, workflowObject, state, callback) {
 
 // Kicks off a new workflow for each branch. The results from the workflow are pushed
 // into an array. When the workflow is complete, stateTransition is run with the array as its argument
-function executeParallel(lambda, workflowObject, currentState, callback) {
+function executeParallel(awsLambdaController, workflowObject, currentState, stateTransition) {
     const numberOfStates = workflowObject.States[currentState.StateName].Branches.length;
     let completeStates = 0;
     const resultArray = [];
     workflowObject.States[currentState.StateName].Branches.forEach((branch, index) => {
-        startWorkflow(lambda, workflowObject.States[currentState.StateName].Branches[index], currentState.StateData, stateComplete.bind(null, index));
+        startWorkflow(awsLambdaController, workflowObject.States[currentState.StateName].Branches[index], currentState.StateData, stateComplete.bind(null, index));
     });
     function stateComplete(stateIndex, data) {
         completeStates++;
         resultArray[stateIndex] = data;
         if (completeStates === numberOfStates) {
-            callback(resultArray);
+            stateTransition(resultArray);
         }
     }
 }
 
-// Executes a lambda and calls stateTransition with its result
-function executeTask(lambda, workflowObject, currentState, callback) {
+// Executes a lambda and calls stateTransition on its result
+function executeTask(awsLambdaController, workflowObject, currentState, stateTransition) {
     currentInvocations++;
     if (currentInvocations > maxInvocations) {
         throw new Error("Max invocations exceeded");
@@ -123,7 +106,7 @@ function executeTask(lambda, workflowObject, currentState, callback) {
             FunctionName: workflowObject.States[currentState.StateName].LambdaToInvoke,
             Payload: JSON.stringify(currentState.StateData)
         };
-        lambda.invoke(paramsForCurrentLambda, (err, data) => {
+        awsLambdaController.invoke(paramsForCurrentLambda, (err, data) => {
             if (err) {
                 throw new Error(`Lambda ${currentState.StateName} threw Error: ${err}`);
             }
@@ -131,63 +114,103 @@ function executeTask(lambda, workflowObject, currentState, callback) {
                 console.log('lambda name', currentState.StateName);
                 console.log('lambda input', currentState.StateData);
                 console.log('lambda output', data);
-                callback(JSON.parse(data.Payload));
+                stateTransition(JSON.parse(data.Payload));
             }
         });
     }
 }
 
-// Old function to execute a simple workflow (ie no parallel lambdas).
-// Don't think we need anymore.
-function executeWorkflowOld(jsonPath, workflowInput, region, callback = () => {}) {
-    let invocations = 0;
-    function invokeCurrentLambda(currentState) {
-        const paramsForCurrentLambda = {
-            FunctionName: workflowObject.States[currentState.StateName].LambdaToInvoke,
-            Payload: currentState.StateData
-        };
-        // limit invocations. just to safeguard the dev environment
-        if (invocations < maxInvocations) {
-            invocations++;
-            const lambdaInvocation = lambda.invoke(paramsForCurrentLambda, (err, data) => {
-                console.log('data', data);
-                if (! workflowObject.States[currentState.StateName].End) {
-                    const nextState = {
-                        StateName: workflowObject.States[currentState.StateName].Next,
-                        StateData: JSON.stringify({array: JSON.parse(data.Payload)})
-                    };
-                    invokeCurrentLambda(nextState);
+// Execute choice state. Allows conditional jumping to the next state based on the result of a previous state.
+function executeChoice(workflowObject, currentState, stateTransition) {
+    function evaluateChoice(choiceObject) {
+        if (choiceObject.And) {
+            for (let i = 0; i < choiceObject.And.length; i++) {
+                if (! evaluateChoice(choiceObject.And[i])) {
+                    return false;
                 }
-                else {
-                    callback(JSON.parse(data.Payload));
+            }
+            return true;
+        }
+        else if (choiceObject.Or) {
+            for (let i = 0; i < choiceObject.And.length; i++) {
+                if (evaluateChoice(choiceObject.Or[i])) {
+                    return true;
                 }
-            });
+            }
+            return false;
+        }
+        else if (choiceObject.Not) {
+            return (! evaluateChoice(choiceObject.Not));
         }
         else {
-            throw new Error('Max Invocations Exceeded');
+            if (choiceObject.Variable.substring(0,2) !== '$.' || choiceObject.Variable.length < 3) {
+                throw new Error(`Invalid variable name ${choiceObject.Variable}. Variable names should be of the format $.Property_Name`);
+            }
+            const variable = currentState.StateData[choiceObject.Variable.substring(2)];
+            for (let prop in choiceObject) {
+                if (prop === 'Variable') {
+                    continue;
+                }
+                else if (prop === 'Next') {
+                    continue;
+                }
+                else {
+                    switch(prop) {
+                        case "BooleanEquals":
+                            return Boolean(variable) === Boolean(choiceObject[prop]); 
+                        case "NumericEquals":
+                            return Number(variable) === Number(choiceObject[prop]);
+                        case "NumericGreaterThan":
+                            return Number(variable) > Number(choiceObject[prop]);
+                        case "NumericGreaterThanEquals":
+                            return Number(variable) >= Number(choiceObject[prop]);
+                        case "NumericLessThan":
+                            return Number(variable) < Number(choiceObject[prop]);
+                        case "NumericLessThanEquals":
+                            return Number(variable) <= Number(choiceObject[prop]);
+                        case "StringEquals":
+                            return String(variable) === String(choiceObject[prop]);
+                        case "StringGreaterThan":
+                            return String(variable) > String(choiceObject[prop]);
+                        case "StringGreaterThanEquals":
+                            return String(variable) >= String(choiceObject[prop]);
+                        case "StringLessThan":
+                            return String(variable) < String(choiceObject[prop]);
+                        case "StringLessThanEquals":
+                            return String(variable) <= String(choiceObject[prop]);
+                        case "TimestampEquals":
+                            return Date(variable) === Date(choiceObject[prop]);
+                        case "TimestampGreaterThan":
+                            return Date(variable) > Date(choiceObject[prop]);
+                        case "TimestampGreaterThanEquals":
+                            return Date(variable) >= Date(choiceObject[prop]);
+                        case "TimestampLessThan":
+                            return Date(variable) < Date(choiceObject[prop]);
+                        case "TimestampLessThanEquals":
+                            return Date(variable) <= Date(choiceObject[prop]);
+                        default:
+                            throw new Error(`${prop} incorrect`);
+                    }
+                }
+            }
         }
     }
-    if (! region) {
-        throw new Error('Must specify an AWS region (e.g. \'us-east-1\')');
+    const choiceArray = workflowObject.States[currentState.StateName].Choices;
+    for (let i = 0; i < choiceArray.length; i++) {
+        if (evaluateChoice(choiceArray[i])) {
+            currentState.StateName = choiceArray[i].Next;
+            return currentState;
+        }
     }
-    const lambda = new AWS.Lambda();
-    AWS.config.update({region: region});
-    const workflowObject = JSON.parse(fs.readFileSync(jsonPath));
-    if (! workflowObject.StartAt) {
-        throw new Error('Input JSON must specify a StartAt state');
+    currentState.StateName = workflowObject.States[currentState.StateName].Default;
+    if (! currentState.StateName) {
+        throw new Error('No default choice state to go to.');
     }
-    if (detectCycle(workflowObject)) {
-        throw new Error('Input JSON states form a cycle, please correct');
-    }
-    const startState = {
-        StateName: workflowObject.StartAt,
-        StateData: JSON.stringify(workflowInput)
-    };
-    invokeCurrentLambda(startState);
+    return currentState;
 }
 
 function testWorkflow() {
-    executeWorkflow('test.json', {array: [4, 5, 6]}, 'us-east-1', (x) => console.log(x));
+    executeWorkflow('choiceTest.json', {array: [1, 1, 1]}, 'us-east-1', (x) => console.log(x));
 }
 
 testWorkflow();

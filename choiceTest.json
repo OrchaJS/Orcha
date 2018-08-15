@@ -1,0 +1,75 @@
+{
+    "StartAt": "parallelMeUpFam",
+    "States": {
+        "parallelMeUpFam" : {
+            "Type": "Parallel",
+            "Next": "sumArrays",
+            "Branches": [
+                {
+                    "StartAt": "addOneLol",
+                    "States": {
+                        "addOneLol" : {
+                            "Type": "Task",
+                            "LambdaToInvoke": "addOneToArrayNumbers",
+                            "End": true
+                        }
+                    }
+                },
+                {
+                    "StartAt": "squareArrayNumbers",
+                    "States": {
+                        "squareArrayNumbers": {
+                            "Type": "Task",
+                            "LambdaToInvoke": "squareArrayNumbers",
+                            "End": true
+                        }
+                    }
+                }
+            ]
+        },
+        "sumArrays": {
+            "Type": "Task",
+            "LambdaToInvoke": "sumArrays",
+            "Next": "filterSum"
+        },
+        "filterSum": {
+            "Type": "Choice",
+            "Choices": [
+                {
+                    "And": [
+                        {
+                            "Variable": "$.sum",
+                            "NumericGreaterThanEquals": 20
+                        },
+                        {
+                            "Variable": "$.sum",
+                            "NumericLessThanEquals": 30
+                        }
+                    ],
+                    "Next": "addOneToArrayNumbers"
+                },
+                {
+                    "Variable": "$.sum",
+                    "NumericLessThanEquals": 20,
+                    "Next": "addOneaddOne"
+                }
+            ],
+            "Default": "addOneJump"
+        },
+        "addOneJump": {
+            "Type": "Task",
+            "LambdaToInvoke": "addOneToArrayNumbers",
+            "Next": "addOneaddOne"
+        },
+        "addOneaddOne": {
+            "Type": "Task",
+            "LambdaToInvoke": "addOneToArrayNumbers",
+            "Next": "addOneToArrayNumbers"
+        },
+        "addOneToArrayNumbers": {
+            "Type": "Task",
+            "LambdaToInvoke": "addOneToArrayNumbers",
+            "End": true
+        }
+    }
+}
