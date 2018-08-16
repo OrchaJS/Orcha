@@ -1,6 +1,7 @@
 "use strict";
 
 const AWS = require('aws-sdk');
+const fs = require('fs');
 
 const maxInvocations = 20;
 let currentInvocations = 0;
@@ -213,10 +214,10 @@ function testWorkflow() {
     executeWorkflow('choiceTest.json', {array: [1, 1, 1]}, 'us-east-1', (x) => console.log(x));
 }
 
-testWorkflow();
+//testWorkflow();
 
-const lambdaOrchestrator = {
+const orca = {
     executeWorkflow: executeWorkflow
 };
 
-module.exports = lambdaOrchestrator;
+module.exports = orca;

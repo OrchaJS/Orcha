@@ -29,7 +29,7 @@
         },
         "addTwoArrays": {
             "Type": "Task",
-            "LambdaToInvoke": "addTwoArrays",
+            "LambdaToInvoke": "sumArrays",
             "Next": "addOneToArrayNumbers"
         },
         "addOneToArrayNumbers": {
