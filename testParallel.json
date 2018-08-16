@@ -1,0 +1,41 @@
+{
+    "StartAt": "parallelMeUpFam",
+    "States": {
+        "parallelMeUpFam" : {
+            "Type": "Parallel",
+            "Next": "addTwoArrays",
+            "Branches": [
+                {
+                    "StartAt": "addOneLol",
+                    "States": {
+                        "addOneLol" : {
+                            "Type": "Task",
+                            "LambdaToInvoke": "addOneToArrayNumbers",
+                            "End": true
+                        }
+                    }
+                },
+                {
+                    "StartAt": "squareArrayNumbers",
+                    "States": {
+                        "squareArrayNumbers": {
+                            "Type": "Task",
+                            "LambdaToInvoke": "squareArrayNumbers",
+                            "End": true
+                        }
+                    }
+                }
+            ]
+        },
+        "addTwoArrays": {
+            "Type": "Task",
+            "LambdaToInvoke": "addTwoArrays",
+            "Next": "addOneToArrayNumbers"
+        },
+        "addOneToArrayNumbers": {
+            "Type": "Task",
+            "LambdaToInvoke": "addOneToArrayNumbers",
+            "End": true
+        }
+    }
+}

@@ -1,14 +1,19 @@
 {
-  "name": "LambdaOrchestrator",
+  "name": "lambda-orchestrator",
   "version": "1.0.0",
   "description": "Lambda orchestration tool",
-  "main": "lambdaFlow.js",
+  "main": "client/main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "client": "electron ."
   },
   "author": "LambdaOrchestrator",
   "license": "ISC",
+  "devDependencies": {
+    "electron": "^2.0.0"
+  },
   "dependencies": {
-    "aws-sdk": "^2.291.0"
+    "aws-sdk": "^2.291.0",
+    "electron-reload": "^1.2.5",
+    "mermaid": "^8.0.0-rc.8"
   }
 }

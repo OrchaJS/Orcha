@@ -1,6 +1,7 @@
 "use strict";
 
 const AWS = require('aws-sdk');
+const fs = require('fs');
 
 const maxInvocations = 20;
 let currentInvocations = 0;
