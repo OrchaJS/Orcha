@@ -52,8 +52,45 @@ function startWorkflow(
 // function to transition to the next state (the stateTransition function).
 // In the future, we will aim to add support for other types of States (e.g. Choice State)
 function executeState(awsLambdaController, workflowObject, state, callback) {
-  function stateTransition(err, data) {
+  function stateTransition(data, err) {
     if (err) {
+      if (state.Retry) {
+        function handleRetry(workflowObject, state, err) {
+          let counter = 0;
+          if (err.message === workflowObject.State[state].Retry.ErrorEquals) {
+            const stateToRetry = workflowObject.State[state];
+            while (counter < stateToRetry.Retry.MaxAttemps) {
+              if (counter <= stateToRetry.Retry.MaxAttempts) {
+                let intervalTime =
+                  counter === 0
+                    ? stateToRetry.Retry.IntervalSeconds
+                    : retryInterval(
+                        stateToRetry.Retry.IntervalSeconds,
+                        stateToRetry.Retry.BackoffRate,
+                        counter
+                      );
+
+                setTimeout(
+                  executeTask(
+                    awsLambdaController,
+                    workflowObject,
+                    stateToRetry,
+                    stateTransition
+                  ),
+                  intervalTime
+                );
+              }
+              counter++;
+            }
+          }
+          function retryInterval(initial, backoff, counter) {
+            for (let i = 0; i < counter; i++) {
+              initial *= backoff;
+            }
+            return initial;
+          }
+        }
+      }
       const errors = workflowObject.States[state.StateName].Catch;
       for (let i = 0; i < errors.length; i++) {
         if (err.message === errors[i].ErrorEquals[0]) {
@@ -162,12 +199,14 @@ function executeTask(
     };
     awsLambdaController.invoke(paramsForCurrentLambda, (err, data) => {
       if (err) {
+        //does error catch have to be right here??
+        stateTransition(paramsForCurrentLambda.PayLoad, err);
         throw new Error(`Lambda ${currentState.StateName} threw Error: ${err}`);
       } else {
         console.log('lambda name', currentState.StateName);
         console.log('lambda input', currentState.StateData);
         console.log('lambda output', data);
-        stateTransition(err, JSON.parse(data.Payload));
+        stateTransition(JSON.parse(data.Payload));
       }
     });
   }
