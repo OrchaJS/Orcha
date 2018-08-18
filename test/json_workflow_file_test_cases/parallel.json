@@ -30,11 +30,6 @@
         "addTwoArrays": {
             "Type": "Task",
             "LambdaToInvoke": "sumArrays",
-            "Next": "addOneToArrayNumbers"
-        },
-        "addOneToArrayNumbers": {
-            "Type": "Task",
-            "LambdaToInvoke": "addOneToArrayNumbers",
             "End": true
         }
     }

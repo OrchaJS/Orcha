@@ -1,17 +1,18 @@
 {
-  "name": "orca",
+  "name": "horchata",
   "version": "1.0.0",
   "description": "AWS Lambda orchestration tool",
-  "main": "src/orca.js",
+  "main": "src/horchata.js",
   "scripts": {
     "test": "jest test"
   },
-  "author": "orca",
+  "author": "LambdaOrchestrator",
   "license": "ISC",
   "dependencies": {
     "aws-sdk": "^2.291.0"
   },
   "devDependencies": {
+    "aws-sdk-mock": "^4.1.0",
     "jest": "^23.5.0"
   }
 }

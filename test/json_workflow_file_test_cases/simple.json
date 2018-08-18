@@ -1,0 +1,20 @@
+{
+    "StartAt": "addOneToArrayNumbers",
+    "States": {
+        "addOneToArrayNumbers": {
+            "Type": "Task",
+            "LambdaToInvoke": "addOneToArrayNumbers",
+            "Next": "squareArrayNumbers"
+        },
+        "squareArrayNumbers": {
+            "Type": "Task",
+            "LambdaToInvoke": "squareArrayNumbers",
+            "Next": "addOneAgain"
+        },
+        "addOneAgain": {
+            "Type": "Task",
+            "LambdaToInvoke": "addOneToArrayNumbers",
+            "End": true
+        }
+    }
+}

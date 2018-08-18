@@ -8,7 +8,7 @@ let currentInvocations = 0;
 
 // read in the users JSON workflow file and start executing the workflow
 function executeWorkflow(jsonPath, workflowInput, region, usersCallback) {
-    // currentInvocations = 0;
+    currentInvocations = 0;
     if (! region) {
         throw new Error('Must specify an AWS region (e.g. \'us-east-1\')');
     }
@@ -112,9 +112,10 @@ function executeTask(awsLambdaController, workflowObject, currentState, stateTra
                 throw new Error(`Lambda ${currentState.StateName} threw Error: ${err}`);
             }
             else {
-                console.log('lambda name', currentState.StateName);
-                console.log('lambda input', currentState.StateData);
-                console.log('lambda output', data);
+                // console.log statements for debugging and display purposes in dev
+                // console.log('lambda name', currentState.StateName);
+                // console.log('lambda input', currentState.StateData);
+                // console.log('lambda output', data);
                 stateTransition(JSON.parse(data.Payload));
             }
         });
@@ -211,13 +212,13 @@ function executeChoice(workflowObject, currentState, stateTransition) {
 }
 
 function testWorkflow() {
-    executeWorkflow('choiceTest.json', {array: [1, 1, 1]}, 'us-east-1', (x) => console.log(x));
+    executeWorkflow('choiceTest.json', {array: [1, 2, 3]}, 'us-east-1', (x) => console.log(x));
 }
 
 //testWorkflow();
 
-const orca = {
+const horchata = {
     executeWorkflow: executeWorkflow
 };
 
-module.exports = orca;
+module.exports = horchata;
