@@ -56,8 +56,6 @@ function executeState(awsLambdaController, workflowObject, state, callback) {
     if (err) {
       if (state.Retry) {
         async function handleRetry(workflowObject, state, err) {
-          //change counter to be stored in workflowObject as method TimesAttempted --done
-          //let counter = 0;
           for (let i = 0; i < state.Retry.length; i++) {
             if (
               err.message === workflowObject.States[state].Retry[i].ErrorEquals
@@ -69,7 +67,6 @@ function executeState(awsLambdaController, workflowObject, state, callback) {
                 stateToRetry.Retry[i].TimesAttempted ===
                 stateToRetry.Retry.MaxAttempts
               ) {
-                // throw Error
                 throw new Error(
                   `Exceeded Maximum Attempts; Lambda ${
                     stateToRetry.StateName
@@ -88,7 +85,7 @@ function executeState(awsLambdaController, workflowObject, state, callback) {
                         stateToRetry.Retry[i].BackoffRate,
                         stateToRetry.Retry[i].TimesAttempted
                       );
-                // set async --done
+
                 await setTimeout(
                   executeState(
                     awsLambdaController,
@@ -102,7 +99,6 @@ function executeState(awsLambdaController, workflowObject, state, callback) {
               }
               stateToRetry.Retry[i].TimesAttempted++;
             }
-            //last line loop
           }
           function retryInterval(initial, backoff, counter) {
             for (let i = 0; i < counter; i++) {
@@ -220,9 +216,7 @@ function executeTask(
     };
     awsLambdaController.invoke(paramsForCurrentLambda, (err, data) => {
       if (err) {
-        //does error catch have to be right here??
         stateTransition(paramsForCurrentLambda.PayLoad, err);
-        // throw new Error(`Lambda ${currentState.StateName} threw Error: ${err}`);
         stateTransition(data, err);
       } else {
         console.log('lambda name', currentState.StateName);
