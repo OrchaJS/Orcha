@@ -55,33 +55,54 @@ function executeState(awsLambdaController, workflowObject, state, callback) {
   function stateTransition(data, err) {
     if (err) {
       if (state.Retry) {
-        function handleRetry(workflowObject, state, err) {
-          let counter = 0;
-          if (err.message === workflowObject.State[state].Retry.ErrorEquals) {
-            const stateToRetry = workflowObject.State[state];
-            while (counter < stateToRetry.Retry.MaxAttemps) {
-              if (counter <= stateToRetry.Retry.MaxAttempts) {
-                let intervalTime =
-                  counter === 0
-                    ? stateToRetry.Retry.IntervalSeconds
-                    : retryInterval(
-                        stateToRetry.Retry.IntervalSeconds,
-                        stateToRetry.Retry.BackoffRate,
-                        counter
-                      );
+        async function handleRetry(workflowObject, state, err) {
+          //change counter to be stored in workflowObject as method TimesAttempted --done
+          //let counter = 0;
+          for (let i = 0; i < state.Retry.length; i++) {
+            if (
+              err.message === workflowObject.States[state].Retry[i].ErrorEquals
+            ) {
+              state.Retry.TimesAttempted = 0;
+              const stateToRetry = workflowObject.States[state];
 
-                setTimeout(
-                  executeTask(
+              if (
+                stateToRetry.Retry[i].TimesAttempted ===
+                stateToRetry.Retry.MaxAttempts
+              ) {
+                // throw Error
+                throw new Error(
+                  `Exceeded Maximum Attempts; Lambda ${
+                    stateToRetry.StateName
+                  } threw Error: ${err}`
+                );
+              }
+              if (
+                stateToRetry.Retry[i].TimesAttempted <
+                stateToRetry.Retry[i].MaxAttempts
+              ) {
+                let intervalTime =
+                  stateToRetry.Retry[i].TimesAttempted === 0
+                    ? stateToRetry.Retry[i].IntervalSeconds
+                    : retryInterval(
+                        stateToRetry.Retry[i].IntervalSeconds,
+                        stateToRetry.Retry[i].BackoffRate,
+                        stateToRetry.Retry[i].TimesAttempted
+                      );
+                // set async --done
+                await setTimeout(
+                  executeState(
                     awsLambdaController,
                     workflowObject,
                     stateToRetry,
-                    stateTransition
+
+                    callback
                   ),
                   intervalTime
                 );
               }
-              counter++;
+              stateToRetry.Retry[i].TimesAttempted++;
             }
+            //last line loop
           }
           function retryInterval(initial, backoff, counter) {
             for (let i = 0; i < counter; i++) {
@@ -201,7 +222,8 @@ function executeTask(
       if (err) {
         //does error catch have to be right here??
         stateTransition(paramsForCurrentLambda.PayLoad, err);
-        throw new Error(`Lambda ${currentState.StateName} threw Error: ${err}`);
+        // throw new Error(`Lambda ${currentState.StateName} threw Error: ${err}`);
+        stateTransition(data, err);
       } else {
         console.log('lambda name', currentState.StateName);
         console.log('lambda input', currentState.StateData);
