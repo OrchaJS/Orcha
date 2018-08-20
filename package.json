@@ -1,14 +1,22 @@
 {
-  "name": "LambdaOrchestrator",
+  "name": "horchata",
   "version": "1.0.0",
-  "description": "Lambda orchestration tool",
-  "main": "lambdaFlow.js",
+  "description": "AWS Lambda orchestration tool",
+  "main": "src/horchata.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest test",
+    "client": "electron ."
   },
   "author": "LambdaOrchestrator",
   "license": "ISC",
   "dependencies": {
-    "aws-sdk": "^2.291.0"
+    "aws-sdk": "^2.291.0",
+    "electron": "^2.0.0"
+  },
+  "devDependencies": {
+    "aws-sdk-mock": "^4.1.0",
+    "jest": "^23.5.0",
+    "electron-reload": "^1.2.5",
+    "mermaid": "^8.0.0-rc.8"
   }
 }
