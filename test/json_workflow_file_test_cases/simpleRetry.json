@@ -1,0 +1,38 @@
+{
+  "StartAt": "addOneToArrayNumbers",
+  "States": {
+    "addOneToArrayNumbers": {
+      "Type": "Task",
+      "LambdaToInvoke": "addOneToArrayNumbers",
+      "Next": "squareRootArrayNumbers"
+    },
+    "squareRootArrayNumbers": {
+      "Type": "Task",
+      "LambdaToInvoke": "squareRootArrayNumbers",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "SquareRootOfNegativeNumberError"
+          ],
+          "IntervalSeconds": 3,
+          "MaxAttempts": 2,
+          "BackoffRate": 1.5
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "SquareRootOfNegativeNumberError"
+          ],
+          "Next": "addOneAgain"
+        }
+      ],
+      "Next": "addOneAgain"
+    },
+    "addOneAgain": {
+      "Type": "Task",
+      "LambdaToInvoke": "addOneToArrayNumbers",
+      "End": true
+    }
+  }
+}

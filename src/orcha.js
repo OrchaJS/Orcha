@@ -19,23 +19,13 @@ function executeWorkflow(jsonPath, workflowInput, region, usersCallback) {
   const awsLambdaController = new AWS.Lambda();
   const workflowObject = JSON.parse(fs.readFileSync(jsonPath));
 
-  startWorkflow(
-    awsLambdaController,
-    workflowObject,
-    workflowInput,
-    usersCallback
-  );
+  startWorkflow(awsLambdaController, workflowObject, workflowInput, usersCallback);
 }
 
 // Execute the workflow. Note that this may not be the entire JSON file.
 // It may be the entire workflow, but it could also be called by executeParallel,
 // meaning that the workflow is one branch in a tree of parallel execution.
-function startWorkflow(
-  awsLambdaController,
-  workflowObject,
-  workflowInput,
-  callback
-) {
+function startWorkflow(awsLambdaController, workflowObject, workflowInput, callback) {
   if (!workflowObject.StartAt) {
     throw new Error('Input JSON must specify a StartAt state');
   }
@@ -55,76 +45,77 @@ function startWorkflow(
 function executeState(awsLambdaController, workflowObject, state, callback) {
   function stateTransition(data, err) {
     if (err) {
-      if (state.Retry) {
-        async function handleRetry(workflowObject, state, err) {
-          for (let i = 0; i < state.Retry.length; i++) {
-            if (
-              err.message === workflowObject.States[state].Retry[i].ErrorEquals
-            ) {
-              state.Retry.TimesAttempted = 0;
-              const stateToRetry = workflowObject.States[state];
-
-              if (
-                stateToRetry.Retry[i].TimesAttempted ===
-                stateToRetry.Retry.MaxAttempts
-              ) {
-                throw new Error(
-                  `Exceeded Maximum Attempts; Lambda ${
-                    stateToRetry.StateName
-                  } threw Error: ${err}`
-                );
+      const stateObject = workflowObject.States[state.StateName];
+      let retried = false;
+      if (stateObject.Retry) {
+        const stateToRetry = stateObject;
+        // console.log('stateToRetry', stateToRetry);
+        // console.log('stateToRetry ErrorEquals', stateToRetry.Retry[0].ErrorEquals);
+        // console.log('err ErrorType', err);
+        for (let i = 0; i < stateToRetry.Retry.length; i++) {
+          for (let j = 0; j < stateToRetry.Retry[i].ErrorEquals.length; j++) {
+            if (err.errorType === stateToRetry.Retry[i].ErrorEquals[j]) {
+              // console.log('found error');
+              if (! stateToRetry.Retry[i].TimesRetried) {
+                stateToRetry.Retry[i].TimesRetried = {};
               }
-              if (
-                stateToRetry.Retry[i].TimesAttempted <
-                stateToRetry.Retry[i].MaxAttempts
-              ) {
-                let intervalTime =
-                  stateToRetry.Retry[i].TimesAttempted === 0
-                    ? stateToRetry.Retry[i].IntervalSeconds
-                    : retryInterval(
-                        stateToRetry.Retry[i].IntervalSeconds,
-                        stateToRetry.Retry[i].BackoffRate,
-                        stateToRetry.Retry[i].TimesAttempted
-                      );
-
-                await setTimeout(
-                  executeState(
-                    awsLambdaController,
-                    workflowObject,
-                    stateToRetry,
-
-                    callback
-                  ),
-                  intervalTime
-                );
+              const timesRetriedObject = stateToRetry.Retry[i].TimesRetried;
+              if (! timesRetriedObject[err.errorType]) {
+                timesRetriedObject[err.errorType] = 0;
               }
-              stateToRetry.Retry[i].TimesAttempted++;
+              const timesRetried = timesRetriedObject[err.errorType];
+              const maxRetryAttempts = stateToRetry.Retry[i].MaxAttempts || 3;
+              if (timesRetried === maxRetryAttempts) {
+                //throw new Error(`Exceeded Maximum Retry Attempts; Lambda ${stateToRetry.StateName} threw Error: ${err}`);
+                break;
+              }
+              if (timesRetried < maxRetryAttempts) {
+                const waitTime = timesRetried === 0
+                  ? stateToRetry.Retry[i].IntervalSeconds * 1000 || 1000
+                  : stateToRetry.Retry[i].BackoffRate * 1000 || 2000;
+                state.Retrying = true;
+                setTimeout(executeState.bind(null, awsLambdaController, workflowObject, state, callback), waitTime);
+                retried = true;
+                timesRetriedObject[err.errorType]++;
+                break;
+              }
             }
           }
-          function retryInterval(initial, backoff, counter) {
-            for (let i = 0; i < counter; i++) {
-              initial *= backoff;
-            }
-            return initial;
-          }
-        }
-      }
-      const errors = workflowObject.States[state.StateName].Catch;
-      for (let i = 0; i < errors.length; i++) {
-        for (let k = 0; k < errors.ErrorEquals.length; k++) {
-          if (err.message === errors[i].ErrorEquals[k]) {
-            executeState(
-              awsLambdaController,
-              workflowObject,
-              errors[i].ErrorsEquals[0],
-              callback
-            );
+          if (retried) {
             break;
           }
         }
       }
+      if ((! retried) && stateObject.Catch) {
+        const errors = stateObject.Catch;
+        let caught = false;
+        for (let i = 0; i < errors.length; i++) {
+          for (let j = 0; j < errors[i].ErrorEquals.length; j++) {
+            if (err.errorType === errors[i].ErrorEquals[j]) {
+              const catchState = {
+                StateName: errors[i].Next,
+                StateData: state.StateData,
+                Error: err.errorType,
+                Cause: err.errorMessage
+              };
+              executeState(awsLambdaController, workflowObject, catchState, callback);
+              caught = true;
+              break;
+            }
+          }
+          if (caught) {
+            break;
+          }
+        }
+        if (! caught) {
+          throw new Error(`${err.errorType} not caught for state ${state.StateName}`);
+        }
+      }
+      else if (! retried) {
+        throw new Error(`${err.errorType} not caught for state ${state.StateName}`);
+      }
     }
-    if (!workflowObject.States[state.StateName].End) {
+    else if (!workflowObject.States[state.StateName].End) {
       const nextState = {
         StateName: workflowObject.States[state.StateName].Next,
         StateData: data
@@ -135,12 +126,8 @@ function executeState(awsLambdaController, workflowObject, state, callback) {
     }
   }
 
-  if (workflowObject.States[state.StateName].Visited) {
-    throw new Error(
-      `State ${
-        state.StateName
-      } has already been visited! There may be a cycle/infinite loop in your state transitions. Please check your JSON file.`
-    );
+  if (workflowObject.States[state.StateName].Visited && (! states.Retrying)) {
+    throw new Error(`State ${state.StateName} has already been visited! There may be a cycle/infinite loop in your state transitions. Please check your JSON file.`);
   }
   workflowObject.States[state.StateName].Visited = true;
   switch (workflowObject.States[state.StateName].Type) {
@@ -148,20 +135,10 @@ function executeState(awsLambdaController, workflowObject, state, callback) {
       executeTask(awsLambdaController, workflowObject, state, stateTransition);
       break;
     case 'Parallel':
-      executeParallel(
-        awsLambdaController,
-        workflowObject,
-        state,
-        stateTransition
-      );
+      executeParallel(awsLambdaController, workflowObject, state, stateTransition);
       break;
     case 'Choice':
-      executeState(
-        awsLambdaController,
-        workflowObject,
-        executeChoice(workflowObject, state),
-        callback
-      );
+      executeState(awsLambdaController, workflowObject, executeChoice(workflowObject, state), callback);
       break;
     case 'Succeed':
       callback(state.StateData);
@@ -173,24 +150,13 @@ function executeState(awsLambdaController, workflowObject, state, callback) {
 
 // Kicks off a new workflow for each branch. The results from the workflow are pushed
 // into an array. When the workflow is complete, stateTransition is run with the array as its argument
-function executeParallel(
-  awsLambdaController,
-  workflowObject,
-  currentState,
-  stateTransition
-) {
-  const numberOfStates =
-    workflowObject.States[currentState.StateName].Branches.length;
+function executeParallel(awsLambdaController, workflowObject, currentState, stateTransition) {
+  const numberOfStates = workflowObject.States[currentState.StateName].Branches.length;
   let completeStates = 0;
   const resultArray = [];
   workflowObject.States[currentState.StateName].Branches.forEach(
     (branch, index) => {
-      startWorkflow(
-        awsLambdaController,
-        workflowObject.States[currentState.StateName].Branches[index],
-        currentState.StateData,
-        stateComplete.bind(null, index)
-      );
+      startWorkflow(awsLambdaController, workflowObject.States[currentState.StateName].Branches[index], currentState.StateData, stateComplete.bind(null, index));
     }
   );
   function stateComplete(stateIndex, data) {
@@ -203,24 +169,19 @@ function executeParallel(
 }
 
 // Executes a lambda and calls stateTransition on its result
-function executeTask(
-  awsLambdaController,
-  workflowObject,
-  currentState,
-  stateTransition
-) {
+function executeTask(awsLambdaController, workflowObject, currentState, stateTransition) {
   currentInvocations++;
   if (currentInvocations > maxInvocations) {
     throw new Error('Max invocations exceeded');
   } else {
     const paramsForCurrentLambda = {
-      FunctionName:
-        workflowObject.States[currentState.StateName].LambdaToInvoke,
+      FunctionName: workflowObject.States[currentState.StateName].LambdaToInvoke,
       Payload: JSON.stringify(currentState.StateData)
     };
     awsLambdaController.invoke(paramsForCurrentLambda, (err, data) => {
-      if (err) {
-        throw new Error(`Lambda ${currentState.StateName} threw Error: ${err}`);
+      if (data.FunctionError) {
+        const returnObject = JSON.parse(data.Payload);
+        stateTransition(paramsForCurrentLambda, returnObject);
       } else {
         // console.log statements for debugging and display purposes in dev
         // console.log('lambda name', currentState.StateName);
@@ -252,18 +213,10 @@ function executeChoice(workflowObject, currentState, stateTransition) {
     } else if (choiceObject.Not) {
       return !evaluateChoice(choiceObject.Not);
     } else {
-      if (
-        choiceObject.Variable.substring(0, 2) !== '$.' ||
-        choiceObject.Variable.length < 3
-      ) {
-        throw new Error(
-          `Invalid variable name ${
-            choiceObject.Variable
-          }. Variable names should be of the format $.Property_Name`
-        );
+      if (choiceObject.Variable.substring(0, 2) !== '$.' || choiceObject.Variable.length < 3) {
+        throw new Error(`Invalid variable name ${choiceObject.Variable}. Variable names should be of the format $.Property_Name`);
       }
-      const variable =
-        currentState.StateData[choiceObject.Variable.substring(2)];
+      const variable = currentState.StateData[choiceObject.Variable.substring(2)];
       for (let prop in choiceObject) {
         if (prop === 'Variable') {
           continue;
@@ -317,8 +270,7 @@ function executeChoice(workflowObject, currentState, stateTransition) {
       return currentState;
     }
   }
-  currentState.StateName =
-    workflowObject.States[currentState.StateName].Default;
+  currentState.StateName = workflowObject.States[currentState.StateName].Default;
   if (!currentState.StateName) {
     throw new Error('No default choice state to go to.');
   }
@@ -326,15 +278,13 @@ function executeChoice(workflowObject, currentState, stateTransition) {
 }
 
 function testWorkflow() {
-  executeWorkflow('choiceTest.json', { array: [1, 2, 3] }, 'us-east-1', x =>
-    console.log(x)
-  );
+  executeWorkflow('../test/json_workflow_file_test_cases/simpleRetry.json', { array: [-2, 3, 4] }, 'us-east-1', x => console.log(x));
 }
 
 //testWorkflow();
 
-const horchata = {
+const orcha = {
   executeWorkflow: executeWorkflow
 };
 
-module.exports = horchata;
+module.exports = orcha;
