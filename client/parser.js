@@ -1,7 +1,15 @@
-function executeParallel(state) {
+function initializeFunc({ States: states }) {
+  return Object.keys(states).reduce(
+    (accum, key) => `
+    ${accum + key}`,
+    '',
+  );
+}
+
+function executeParallel(state, funcName) {
   const { Branches: branches } = state;
   let output = `
-  subgraph fuck`;
+  subgraph ${funcName}`;
 
   branches.forEach((workFlow) => {
     output += initializeFunc(workFlow);
@@ -17,24 +25,14 @@ function executeParallel(state) {
   return output;
 }
 
-function initializeFunc(workflow) {
-  let output = '';
-  console.log(workflow.States);
-  Object.keys(workflow.States).forEach((key) => {
-    output += `
-    ${key}`;
-  });
-  return output;
-}
-
-function executeStateObject(state = {}, input, prevFunc, currFunc) {
+function executeStateObject(state = {}, prevFunc, currFunc) {
   const type = state.Type;
 
   switch (type) {
     case 'Task':
       return drawLine(prevFunc, currFunc);
     case 'Parallel':
-      return executeParallel(state);
+      return executeParallel(state, currFunc);
     default:
       return drawLine(prevFunc, currFunc);
   }
@@ -47,16 +45,14 @@ function executeBranch(workFlow, cache) {
   let currFunc = startAt;
   let input = '';
 
-  while (true) {
-    if (currFunc === undefined) {
-      input += executeStateObject(state, input, prevFunc, cache);
-      break;
-    }
-    input += executeStateObject(state, input, prevFunc, currFunc);
+  while (currFunc) {
+    input += executeStateObject(state, prevFunc, currFunc);
     prevFunc = currFunc;
     currFunc = state.Next;
     state = states[currFunc];
   }
+
+  input += executeStateObject(state, prevFunc, cache);
 
   return input;
 }
@@ -65,14 +61,15 @@ function executeBranch(workFlow, cache) {
  * options.start === true means outer workflow, else it's a branch
  * RETURNS: STRING
  */
-function executeWorkflow(flowObject, input = '', options) {
+function executeWorkflow(flowObject) {
   const { StartAt: startAt, States: states } = flowObject;
   let state = states[startAt];
   let prevFunc;
   let currFunc = startAt;
+  let input = '';
 
   while (true) {
-    input += executeStateObject(state, input, prevFunc, currFunc, options);
+    input += executeStateObject(state, prevFunc, currFunc);
     if (state === undefined) break;
     if (state.Type === 'Parallel') {
       prevFunc = currFunc;
@@ -93,7 +90,7 @@ function drawLine(a = 'Start', b = 'End') {
   if (a === 'Start' || b === 'End') line = '-.->';
 
   return `
-  ${a}${line}${b}`;
+  ${a} ${line} ${b}`;
 }
 
 function defaults() {
@@ -106,8 +103,9 @@ function defaults() {
 }
 
 function startWorkFlow(workFlow) {
-  const output = defaults();
-  return executeWorkflow(workFlow, output, { start: true });
+  let output = defaults();
+  output += executeWorkflow(workFlow);
+  return output;
 }
 
 module.exports = { startWorkFlow };

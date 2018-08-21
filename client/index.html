@@ -9,7 +9,22 @@
 
 <body>
   <div class="mermaid">
-
+    graph TB
+    Start((Start))
+    End((End))
+    classDef green fill:#9f6,stroke:#333,stroke-width:2px;
+    class Start,End green
+    subgraph fuck
+      addOneLol
+      squareArrayNumbers
+    end
+    Start -.-> addOneLol
+    addOneLol --> addTwoArrays
+    Start -.-> squareArrayNumbers
+    squareArrayNumbers --> addTwoArrays
+    addTwoArrays -.-> End
+    classDef yellow fill:#777,stroke:#333,stroke-width:2px;
+    class addOneLol yellow
   </div>
 
   <script>
