@@ -1,6 +1,6 @@
-# Horchata
+# Orcha
 
-AWS Lambda Orchestrator. Allows you to give a JSON workflow file in the Amazon States Language, and execute lambda functions based on your workflow. You can open your workflow in the UI to see a diagram of your workflow. Executing your workflow requires that you have already created those lambda functions in AWS and have access to them.
+AWS Lambda Orchestrator. Allows you to give a JSON workflow file written in the Amazon States Language, and execute lambda functions based on your workflow. You can open your workflow in the UI to see a diagram of your workflow. Executing your workflow requires that you have already created those lambda functions in AWS and have access to them.
 
 ## Prerequisites
 
@@ -24,15 +24,15 @@ npm install
 
 The workflow files should be written in the [Amazon States Language](https://docs.aws.amazon.com/step-functions/latest/dg/concepts-amazon-states-language.html).
 See test/json_workflow_file_test_cases for example workflow files. These examples are
-used by the unit tests in test/horchata.test.js
+used by the unit tests in test/orcha.test.js
 
 ## Running your workflow
 
 To run your workflow, require the source file, and run executeWorkflow:
 
 ```
-const horchata = require('./src/horchata);
-horchata.executeWorkflow(jsonPath, workflowInput, region, callback);
+const orcha = require('./src/orcha);
+orcha.executeWorkflow(jsonPath, workflowInput, region, callback);
 ```
 
 jsonPath is the path to your workflow, workflowInput is the input to your first lambda, region is the AWS region where your lambdas are, and callback is a function
@@ -40,7 +40,7 @@ that will run after your workflow is complete.
 For example, to run a workflow and log the result to the console, you could run:
 
 ```
-horchata.executeWorkflow('test.json', {users: ['Alice', 'Bob', 'Charlie']}, 'us-east-1', (workflowOutput) => console.log(workflowOutput));
+orcha.executeWorkflow('test.json', {users: ['Alice', 'Bob', 'Charlie']}, 'us-east-1', (workflowOutput) => console.log(workflowOutput));
 ```
 
 ## Using the UI
