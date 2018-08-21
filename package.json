@@ -1,13 +1,13 @@
 {
-  "name": "horchata",
+  "name": "orcha",
   "version": "1.0.0",
   "description": "AWS Lambda orchestration tool",
-  "main": "src/horchata.js",
+  "main": "client/main.js",
   "scripts": {
     "test": "jest test",
     "client": "electron ."
   },
-  "author": "LambdaOrchestrator",
+  "author": "orcha",
   "license": "ISC",
   "dependencies": {
     "aws-sdk": "^2.291.0",
