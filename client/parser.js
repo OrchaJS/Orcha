@@ -1,3 +1,21 @@
+const store = {};
+
+function drawLine(a, b) {
+  let line = '-->';
+  if (a === 'Start' || b === 'End') line = '-.->';
+  return `
+  ${a} ${line} ${b}`;
+}
+
+function defaults() {
+  return `
+  graph TB
+  Start((Start))
+  End((End))
+  classDef orange fill:#ffd47f,stroke:#000,stroke-width:1px;
+  class Start,End orange`;
+}
+
 function initializeFunc({ States: states }) {
   return Object.keys(states).reduce(
     (accum, key) => `
@@ -44,10 +62,12 @@ function executeParallel(state, funcName) {
 }
 
 function executeStateObject(states, state, currFunc, output = '', end = 'End') {
-  if (!state) return output;
+  if (!state || store[currFunc]) return output;
+
+  store[currFunc] = true;
 
   const type = state.Type;
-  console.log(type);
+
   switch (type) {
     case 'Task':
       output += executeTask(state, currFunc, end);
@@ -56,7 +76,7 @@ function executeStateObject(states, state, currFunc, output = '', end = 'End') {
       output += executeParallel(state, currFunc, end);
       break;
     case 'Choice':
-      output += executeChoice(state.Choices, prevFunc, currFunc, end);
+      output += executeChoice(states, state, currFunc);
       break;
     default:
       throw new Error('WTF');
@@ -67,14 +87,17 @@ function executeStateObject(states, state, currFunc, output = '', end = 'End') {
   return executeStateObject(states, nextState, state.Next, output);
 }
 
-function executeChoice(choices, prevFunc, currFunc) {
-  let output = `
-  ${prevFunc} --> ${currFunc}`;
-  choices.forEach((choice) => {
-    output += `
-    ${currFunc} --> ${choice.Next}`;
+function executeChoice(states, state, currFunc) {
+  let output = '';
+
+  state.Choices.forEach((choice) => {
+    output += drawLine(currFunc, choice.Next);
+    output += executeStateObject(states, states[choice.Next], choice.Next);
   });
-  // we've reached the point where we need to run regular execution on "Next"
+
+  output += drawLine(currFunc, state.Default);
+  output += executeStateObject(states, states[state.Default], state.Default);
+
   return output;
 }
 
@@ -84,28 +107,18 @@ function executeWorkflow({ StartAt: startAt, States: states }, end = 'End') {
   const state = states[startAt];
 
   let output = '';
-
-  // draws lines form start to startAt.
-  if (state.Type !== 'Parallel') {
-    output += drawLine('Start', startAt, '-.->');
+  if (end === 'End') {
+    if (state.Type === 'Parallel') {
+      state.Branches.forEach((branch) => {
+        output += drawLine('Start', branch.StartAt);
+      });
+    } else if (state.Type === 'Task' || state.Type === 'Choice') {
+      output += drawLine('Start', startAt);
+    }
   }
 
   output += executeStateObject(states, state, startAt, undefined, end);
   return output;
-}
-
-function drawLine(a, b, line) {
-  return `
-  ${a} ${line} ${b}`;
-}
-
-function defaults() {
-  return `
-  graph TB
-  Start((Start))
-  End((End))
-  classDef green fill:#9f6,stroke:#333,stroke-width:2px;
-  class Start,End green`;
 }
 
 function startWorkFlow(workFlow) {
