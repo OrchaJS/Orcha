@@ -27,16 +27,94 @@ function executeParallel(state, funcName) {
 
 function executeStateObject(state = {}, prevFunc, currFunc) {
   const type = state.Type;
+  // console.log("-----")
+  // console.log()
+  // console.log("-----")
 
   switch (type) {
     case 'Task':
       return drawLine(prevFunc, currFunc);
     case 'Parallel':
       return executeParallel(state, currFunc);
+    case 'Choice':
+      return executeChoice(state.Choices, prevFunc, currFunc);
     default:
       return drawLine(prevFunc, currFunc);
   }
 }
+/**
+ * (Object, String) --> String
+ *
+ * ([
+      {
+        "Next": "addOneaddOne"
+      },
+      {
+        "Next": "addOneToArrayNumbers"
+      }
+    ], 'sumArrays', 'filterSum') --> `
+    sumArrays --> filterSum{filterSum}
+    filterSum --> addOneaddOne
+    filterSum --> addOneToArrayNumbers`;
+
+
+    ({
+      "Type": "Choice",
+      "Choices": [
+        {
+          "And": [
+            {
+              "Variable": "$.sum",
+              "NumericGreaterThanEquals": 20
+            },
+            {
+              "Variable": "$.sum",
+              "NumericLessThanEquals": 30
+            }
+          ],
+          "Next": "addOneToArrayNumbers"
+        },
+        {
+          "Variable": "$.sum",
+          "NumericLessThanEquals": 20,
+          "Next": "addOneaddOne"
+        }
+      ],
+      "Default": "addOneJump"
+    }, 'sumArrays') --> `
+    sumArrays --> filterSum{filterSum}
+    filterSum --> addOneJump
+    filterSum --> addOneToArrayNumbers
+    filterSum --> addOneaddOne
+    addOneJump --> addOneaddOne
+    addOneaddOne --> addOneToArrayNumbers
+    addOneToArrayNumbers -.-> End((End))`;
+ */
+function executeChoice(choices, prevFunc, currFunc) {
+  let output = `
+  ${prevFunc} --> ${currFunc}`;
+  choices.forEach((choice) => {
+    output += `
+    ${currFunc} --> ${choice.Next}`;
+  });
+  // we've reached the point where we need to run regular execution on "Next"
+  return output;
+}
+
+console.log(
+  executeChoice(
+    [
+      {
+        Next: 'addOneaddOne',
+      },
+      {
+        Next: 'addOneToArrayNumbers',
+      },
+    ],
+    'sumArrays',
+    'filterSum',
+  ),
+);
 
 function executeBranch(workFlow, cache) {
   const { StartAt: startAt, States: states } = workFlow;
@@ -78,11 +156,15 @@ function executeWorkflow(flowObject) {
     }
     prevFunc = currFunc;
     currFunc = state.Next;
+    if (state.Type === 'Choice' && currFunc === undefined) break;
+
     state = states[currFunc];
   }
 
   return input;
 }
+
+
 
 function drawLine(a = 'Start', b = 'End') {
   let line = '-->';
