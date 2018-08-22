@@ -15,8 +15,11 @@
   },
   "devDependencies": {
     "aws-sdk-mock": "^4.1.0",
-    "jest": "^23.5.0",
     "electron-reload": "^1.2.5",
+    "eslint": "^5.4.0",
+    "eslint-config-airbnb-base": "^13.1.0",
+    "eslint-plugin-import": "^2.14.0",
+    "jest": "^23.5.0",
     "mermaid": "^8.0.0-rc.8"
   }
 }

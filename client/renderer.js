@@ -4,14 +4,14 @@
 
 const mermaid = require('mermaid');
 const { ipcRenderer } = require('electron');
-const { executeWorkflow } = require('./parser');
+const { startWorkFlow } = require('./parser');
 
 mermaid.initialize({ startOnLoad: true });
 
 const mermaidEl = document.querySelector('.mermaid');
 
 ipcRenderer.on('ping', (event, flow) => {
-  const output = executeWorkflow(flow);
+  const output = startWorkFlow(flow);
 
   console.log(output);
 
