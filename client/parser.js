@@ -6,6 +6,24 @@ function initializeFunc({ States: states }) {
   );
 }
 
+/**
+ *
+ * @param {Object} state
+ * @param {String} prevFunc
+ * @param {String} currFunc
+ */
+function executeTask(state, currFunc, end) {
+  let output = '';
+
+  if (state.End) {
+    output += drawLine(currFunc, end, '-.->');
+  } else {
+    output += drawLine(currFunc, state.Next, '-->');
+  }
+
+  return output;
+}
+
 function executeParallel(state, funcName) {
   const { Branches: branches } = state;
   let output = `
@@ -19,77 +37,36 @@ function executeParallel(state, funcName) {
   end`;
 
   branches.forEach((workFlow) => {
-    output += executeBranch(workFlow, state.Next);
+    output += executeWorkflow(workFlow, state.End || state.Next);
   });
 
   return output;
 }
 
-function executeStateObject(state = {}, prevFunc, currFunc) {
-  const type = state.Type;
-  // console.log("-----")
-  // console.log()
-  // console.log("-----")
+function executeStateObject(states, state, currFunc, output = '', end = 'End') {
+  if (!state) return output;
 
+  const type = state.Type;
+  console.log(type);
   switch (type) {
     case 'Task':
-      return drawLine(prevFunc, currFunc);
+      output += executeTask(state, currFunc, end);
+      break;
     case 'Parallel':
-      return executeParallel(state, currFunc);
+      output += executeParallel(state, currFunc, end);
+      break;
     case 'Choice':
-      return executeChoice(state.Choices, prevFunc, currFunc);
+      output += executeChoice(state.Choices, prevFunc, currFunc, end);
+      break;
     default:
-      return drawLine(prevFunc, currFunc);
+      throw new Error('WTF');
   }
+
+  const nextState = states[state.Next];
+
+  return executeStateObject(states, nextState, state.Next, output);
 }
-/**
- * (Object, String) --> String
- *
- * ([
-      {
-        "Next": "addOneaddOne"
-      },
-      {
-        "Next": "addOneToArrayNumbers"
-      }
-    ], 'sumArrays', 'filterSum') --> `
-    sumArrays --> filterSum{filterSum}
-    filterSum --> addOneaddOne
-    filterSum --> addOneToArrayNumbers`;
 
-
-    ({
-      "Type": "Choice",
-      "Choices": [
-        {
-          "And": [
-            {
-              "Variable": "$.sum",
-              "NumericGreaterThanEquals": 20
-            },
-            {
-              "Variable": "$.sum",
-              "NumericLessThanEquals": 30
-            }
-          ],
-          "Next": "addOneToArrayNumbers"
-        },
-        {
-          "Variable": "$.sum",
-          "NumericLessThanEquals": 20,
-          "Next": "addOneaddOne"
-        }
-      ],
-      "Default": "addOneJump"
-    }, 'sumArrays') --> `
-    sumArrays --> filterSum{filterSum}
-    filterSum --> addOneJump
-    filterSum --> addOneToArrayNumbers
-    filterSum --> addOneaddOne
-    addOneJump --> addOneaddOne
-    addOneaddOne --> addOneToArrayNumbers
-    addOneToArrayNumbers -.-> End((End))`;
- */
 function executeChoice(choices, prevFunc, currFunc) {
   let output = `
   ${prevFunc} --> ${currFunc}`;
@@ -101,76 +78,23 @@ function executeChoice(choices, prevFunc, currFunc) {
   return output;
 }
 
-console.log(
-  executeChoice(
-    [
-      {
-        Next: 'addOneaddOne',
-      },
-      {
-        Next: 'addOneToArrayNumbers',
-      },
-    ],
-    'sumArrays',
-    'filterSum',
-  ),
-);
+function executeWorkflow({ StartAt: startAt, States: states }, end = 'End') {
+  if (!startAt || !states) throw new Error('BAD CONFIG');
 
-function executeBranch(workFlow, cache) {
-  const { StartAt: startAt, States: states } = workFlow;
-  let state = states[startAt];
-  let prevFunc;
-  let currFunc = startAt;
-  let input = '';
+  const state = states[startAt];
 
-  while (currFunc) {
-    input += executeStateObject(state, prevFunc, currFunc);
-    prevFunc = currFunc;
-    currFunc = state.Next;
-    state = states[currFunc];
+  let output = '';
+
+  // draws lines form start to startAt.
+  if (state.Type !== 'Parallel') {
+    output += drawLine('Start', startAt, '-.->');
   }
 
-  input += executeStateObject(state, prevFunc, cache);
-
-  return input;
+  output += executeStateObject(states, state, startAt, undefined, end);
+  return output;
 }
 
-/** **********
- * options.start === true means outer workflow, else it's a branch
- * RETURNS: STRING
- */
-function executeWorkflow(flowObject) {
-  const { StartAt: startAt, States: states } = flowObject;
-  let state = states[startAt];
-  let prevFunc;
-  let currFunc = startAt;
-  let input = '';
-
-  while (true) {
-    input += executeStateObject(state, prevFunc, currFunc);
-    if (state === undefined) break;
-    if (state.Type === 'Parallel') {
-      prevFunc = currFunc;
-      currFunc = state.Next;
-      state = states[currFunc];
-    }
-    prevFunc = currFunc;
-    currFunc = state.Next;
-    if (state.Type === 'Choice' && currFunc === undefined) break;
-
-    state = states[currFunc];
-  }
-
-  return input;
-}
-
-
-
-function drawLine(a = 'Start', b = 'End') {
-  let line = '-->';
-
-  if (a === 'Start' || b === 'End') line = '-.->';
-
+function drawLine(a, b, line) {
   return `
   ${a} ${line} ${b}`;
 }
