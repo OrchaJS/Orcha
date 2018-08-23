@@ -3,23 +3,46 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Hello World!</title>
+  <title>Orca</title>
   <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" integrity="sha384-hWVjflwFxL6sNzntih27bfxkr27PmbbK/iSvJ+a4+0owXq79v+lsFkW54bOGbiDQ" crossorigin="anonymous">
 </head>
 
 <body>
   <div class="mermaid">
     graph TB
-    Start((Start))-->End((End))
+    Start((Start))
+    End((End))
+    class Start,End orange
+    subgraph parrallelMeUpFam
+      addOneLol
+      squareArrayNumbers
+    end
+    Start -.-> addOneLol
+    addOneLol --> sumArrays
+    Start -.-> squareArrayNumbers
+    squareArrayNumbers --> sumArrays
+    sumArrays --> filterSum{filterSum}
+    filterSum --> addOneJump
+    filterSum --> addOneToArrayNumbers
+    filterSum --> addOneaddOne
+    addOneJump --> addOneaddOne
+    addOneaddOne --> addOneToArrayNumbers
+    addOneToArrayNumbers -.-> End((End))
+        
 
-    classDef green fill:#9f6,stroke:#333,stroke-width:2px;
-    class Start,End green
+    classDef orange fill:#ffd47f,stroke:#000,stroke-width:1px;
   </div>
-
+  <hr>
+  <div>
+    <input id="input-field" type="text" placeholder="Input">
+    <button id="input-submit">Submit</button>
+  </div>
   <script>
     // You can also require other files to run in this process
     require('./renderer.js')
+    require('./tie-in.js')
   </script>
 </body>
 
 </html>
+
