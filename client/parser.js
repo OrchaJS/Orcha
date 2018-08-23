@@ -12,8 +12,33 @@ function defaults() {
   graph TB
   Start((Start))
   End((End))
-  classDef orange fill:#ffd47f,stroke:#000,stroke-width:1px;
+
+  classDef orange fill:#ffd47f,  stroke:#000,stroke-width:1px;
+  classDef green fill:#97f679, stroke:#000,stroke-width:1px;
+  classDef red  fill:#ff7d68,  stroke:#000,stroke-width:1px;
+  classDef blue   fill:##76c7ff, stroke:#000,stroke-width:1px;
+  classDef grey   fill:#cbcbcb,  stroke:#000,stroke-width:1px;
+
   class Start,End orange`;
+}
+
+function setColor(func, color) {
+  store[func].color = color;
+}
+
+function getColor(func, color) {
+  return `
+  class ${func} ${color}`;
+}
+
+function getColors() {
+  let output = '';
+
+  Object.entries(store).forEach(([func, props]) => {
+    output += getColor(func, props.color);
+  });
+
+  return output;
 }
 
 function initializeFunc({ States: states }) {
@@ -64,7 +89,7 @@ function executeParallel(state, funcName) {
 function executeStateObject(states, state, currFunc, output = '', end = 'End') {
   if (!state || store[currFunc]) return output;
 
-  store[currFunc] = true;
+  store[currFunc] = { color: null };
 
   const type = state.Type;
 
@@ -124,7 +149,8 @@ function executeWorkflow({ StartAt: startAt, States: states }, end = 'End') {
 function startWorkFlow(workFlow) {
   let output = defaults();
   output += executeWorkflow(workFlow);
+  output += getColors();
   return output;
 }
 
-module.exports = { startWorkFlow };
+module.exports = { startWorkFlow, setColor };
