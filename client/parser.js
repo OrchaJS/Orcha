@@ -1,10 +1,11 @@
-const mermaid = require('mermaid');
+const { ipcRenderer } = require('electron');
 
 class Florender {
   constructor(flow, element) {
     this.flow = flow;
     this.element = element;
     this.store = {};
+    this.output = null;
 
     this.defaults = () => `
     graph TB
@@ -12,9 +13,9 @@ class Florender {
     End((End))
   
     classDef orange fill:#ffd47f,  stroke:#000,stroke-width:1px;
-    classDef green fill:#97f679, stroke:#000,stroke-width:1px;
-    classDef red  fill:#ff7d68,  stroke:#000,stroke-width:1px;
-    classDef blue   fill:##76c7ff, stroke:#000,stroke-width:1px;
+    classDef green  fill:#97f679,  stroke:#000,stroke-width:1px;
+    classDef red    fill:#ff7d68,  stroke:#000,stroke-width:1px;
+    classDef blue   fill:#76c7ff,  stroke:#000,stroke-width:1px;
     classDef grey   fill:#cbcbcb,  stroke:#000,stroke-width:1px;
   
     class Start,End orange`;
@@ -104,27 +105,30 @@ class Florender {
   }
 
   startWorkFlow() {
-    let output = this.defaults();
-    output += this.executeWorkflow(this.flow);
-    output += this.getColors();
-    return output;
+    if (!this.output) {
+      let output = this.defaults();
+      output += this.executeWorkflow(this.flow);
+      this.output = output;
+    }
+
+    return this.output + this.getColors();
   }
 
   setColor(func, color) {
     this.store[func].color = color;
 
-    const output = this.startWorkFlow(this.flow);
+    const output = this.startWorkFlow();
 
-    mermaid.render('theGraph', output, (svgCode) => {
-      this.element.innerHTML = svgCode;
-    });
+    return output;
   }
 
   getColors() {
     let output = '';
 
     Object.entries(this.store).forEach(([func, props]) => {
-      output += this.getColor(func, props.color);
+      if (props.color) {
+        output += this.getColor(func, props.color);
+      }
     });
 
     return output;
