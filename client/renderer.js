@@ -4,18 +4,19 @@
 
 const mermaid = require('mermaid');
 const { ipcRenderer } = require('electron');
-const { startWorkFlow } = require('./parser');
+const Florender = require('./parser');
 
 mermaid.initialize({ startOnLoad: true });
 
 const mermaidEl = document.querySelector('.mermaid');
 
 ipcRenderer.on('ping', (event, flow) => {
-  const output = startWorkFlow(flow);
+  const florender = new Florender(flow, mermaidEl);
+  const output = florender.startWorkFlow(flow);
 
   console.log(output);
 
-  mermaid.render('theGraph', output, function(svgCode) {
+  mermaid.render('theGraph', output, (svgCode) => {
     mermaidEl.innerHTML = svgCode;
   });
 });
