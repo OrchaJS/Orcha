@@ -3,6 +3,7 @@ const {
   app, BrowserWindow, Menu, dialog, ipcMain,
 } = require('electron');
 require('electron-reload')(__dirname);
+const orcha = require('../src/orcha');
 
 const fs = require('fs');
 
@@ -37,8 +38,12 @@ function createWindow() {
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
     mainWindow = null;
+    // not sure if we need to do this
+    configObject = null;
   });
 }
+
+let configObject;
 
 function setMainMenu() {
   const template = [
@@ -51,10 +56,17 @@ function setMainMenu() {
           click() {
             const openPath = dialog.showOpenDialog({ properties: ['openFile'] })[0];
             const content = fs.readFileSync(openPath);
-            const configObject = JSON.parse(content);
+            configObject = JSON.parse(content);
             mainWindow.webContents.send('ping', configObject);
           },
         },
+        {
+          label: 'Run Workflow',
+          accelerator: 'Ctrl+R',
+          click() {
+            mainWindow.webContents.send('runWorkflow', configObject);
+          }
+        }
       ],
     },
   ];
@@ -64,8 +76,12 @@ function setMainMenu() {
   Menu.setApplicationMenu(menu);
 }
 
-ipcMain.on('noodz', (event, func, color) => {
+ipcMain.on('changeColor', (event, func, color) => {
   mainWindow.webContents.send('render', func, color);
+});
+
+ipcMain.on('runWorkflow', (event, input) => {
+  mainWindow.webContents.send('runWorkflow', configObject, input);
 });
 
 // This method will be called when Electron has finished

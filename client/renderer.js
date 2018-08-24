@@ -5,6 +5,7 @@
 const mermaid = require('mermaid');
 const { ipcRenderer } = require('electron');
 const Florender = require('./parser');
+const orcha = require('../src/orcha');
 
 mermaid.initialize({ startOnLoad: true });
 
@@ -12,7 +13,7 @@ const mermaidEl = document.querySelector('.mermaid');
 const changeButtonEl = document.querySelector('.change-color');
 
 changeButtonEl.addEventListener('click', () => {
-  ipcRenderer.send('noodz', 'addTwoArrays', 'red');
+  ipcRenderer.send('changeColor', 'addTwoArrays', 'red');
 });
 
 let florender;
@@ -23,6 +24,12 @@ ipcRenderer.on('ping', (event, flow) => {
 
   mermaid.render('theGraph', output, (svgCode) => {
     mermaidEl.innerHTML = svgCode;
+  });
+});
+
+ipcRenderer.on('runWorkflow', (event, flow, input) => {
+  orcha.executeWorkflowParsed(flow, input, 'us-east-1', (data) => {
+    alert(JSON.stringify(data));
   });
 });
 

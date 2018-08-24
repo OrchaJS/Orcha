@@ -2,6 +2,7 @@
 
 const AWS = require('aws-sdk');
 const fs = require('fs');
+const { ipcRenderer } = require('electron');
 
 const maxInvocations = 20;
 let currentInvocations = 0;
@@ -19,13 +20,28 @@ function executeWorkflow(jsonPath, workflowInput, region, usersCallback) {
   const awsLambdaController = new AWS.Lambda();
   const workflowObject = JSON.parse(fs.readFileSync(jsonPath));
 
-  startWorkflow(awsLambdaController, workflowObject, workflowInput, usersCallback);
+  startWorkflow(awsLambdaController, workflowObject, workflowInput, usersCallback, false);
+}
+
+// same as executeWorkflow but file has already been parsed into json
+// some duplication of code here, will refactor soon.
+function executeWorkflowParsed(workflowObject, workflowInput, region, usersCallback) {
+  currentInvocations = 0;
+  if (! region) {
+      throw new Error('Must specify an AWS region (e.g. \'us-east-1\')');
+  }
+  if (! usersCallback) {
+      throw new Error('Please specify a callback function.');
+  }
+  AWS.config.update({region: region});
+  const awsLambdaController = new AWS.Lambda();
+  startWorkflow(awsLambdaController, workflowObject, workflowInput, usersCallback, true);
 }
 
 // Execute the workflow. Note that this may not be the entire JSON file.
 // It may be the entire workflow, but it could also be called by executeParallel,
 // meaning that the workflow is one branch in a tree of parallel execution.
-function startWorkflow(awsLambdaController, workflowObject, workflowInput, callback) {
+function startWorkflow(awsLambdaController, workflowObject, workflowInput, callback, inGUI) {
   if (!workflowObject.StartAt) {
     throw new Error('Input JSON must specify a StartAt state');
   }
@@ -35,14 +51,15 @@ function startWorkflow(awsLambdaController, workflowObject, workflowInput, callb
     StateData: workflowInput
   };
 
-  executeState(awsLambdaController, workflowObject, startState, callback);
+  executeState(awsLambdaController, workflowObject, startState, callback, inGUI);
 }
 
 // executeState checks whether the state is a Task (e.g. Lambda Execution) state or
 // a Parallel state, and runs the appropriate function. It passes a callback to that
 // function to transition to the next state (the stateTransition function).
 // In the future, we will aim to add support for other types of States (e.g. Choice State)
-function executeState(awsLambdaController, workflowObject, state, callback) {
+function executeState(awsLambdaController, workflowObject, state, callback, inGUI) {
+  if (inGUI) ipcRenderer.send('changeColor', state.StateName, 'orange');
   function stateTransition(data, err) {
     if (err) {
       const stateObject = workflowObject.States[state.StateName];
@@ -74,7 +91,7 @@ function executeState(awsLambdaController, workflowObject, state, callback) {
                   ? stateToRetry.Retry[i].IntervalSeconds * 1000 || 1000
                   : stateToRetry.Retry[i].BackoffRate * 1000 || 2000;
                 state.Retrying = true;
-                setTimeout(executeState.bind(null, awsLambdaController, workflowObject, state, callback), waitTime);
+                setTimeout(executeState.bind(null, awsLambdaController, workflowObject, state, callback, inGUI), waitTime);
                 retried = true;
                 timesRetriedObject[err.errorType]++;
                 break;
@@ -98,7 +115,7 @@ function executeState(awsLambdaController, workflowObject, state, callback) {
                 Error: err.errorType,
                 Cause: err.errorMessage
               };
-              executeState(awsLambdaController, workflowObject, catchState, callback);
+              executeState(awsLambdaController, workflowObject, catchState, callback, inGUI);
               caught = true;
               break;
             }
@@ -108,20 +125,24 @@ function executeState(awsLambdaController, workflowObject, state, callback) {
           }
         }
         if (! caught) {
+          if (inGUI) ipcRenderer.send('changeColor', state.StateName, 'red');
           throw new Error(`${err.errorType} not caught for state ${state.StateName}`);
         }
       }
       else if (! retried) {
+        if (inGUI) ipcRenderer.send('changeColor', state.StateName, 'red');
         throw new Error(`${err.errorType} not caught for state ${state.StateName}`);
       }
     }
     else if (!workflowObject.States[state.StateName].End) {
+      if (inGUI) ipcRenderer.send('changeColor', state.StateName, 'green');
       const nextState = {
         StateName: workflowObject.States[state.StateName].Next,
         StateData: data
       };
-      executeState(awsLambdaController, workflowObject, nextState, callback);
+      executeState(awsLambdaController, workflowObject, nextState, callback, inGUI);
     } else {
+      if (inGUI) ipcRenderer.send('changeColor', state.StateName, 'green');
       callback(data);
     }
   }
@@ -135,10 +156,12 @@ function executeState(awsLambdaController, workflowObject, state, callback) {
       executeTask(awsLambdaController, workflowObject, state, stateTransition);
       break;
     case 'Parallel':
-      executeParallel(awsLambdaController, workflowObject, state, stateTransition);
+      executeParallel(awsLambdaController, workflowObject, state, stateTransition, inGUI);
       break;
     case 'Choice':
-      executeState(awsLambdaController, workflowObject, executeChoice(workflowObject, state), callback);
+      const nextState = executeChoice(workflowObject, state);
+      if (inGUI) ipcRenderer.send('changeColor', state.StateName, 'green');      
+      executeState(awsLambdaController, workflowObject, nextState, callback, inGUI);
       break;
     case 'Succeed':
       callback(state.StateData);
@@ -150,13 +173,13 @@ function executeState(awsLambdaController, workflowObject, state, callback) {
 
 // Kicks off a new workflow for each branch. The results from the workflow are pushed
 // into an array. When the workflow is complete, stateTransition is run with the array as its argument
-function executeParallel(awsLambdaController, workflowObject, currentState, stateTransition) {
+function executeParallel(awsLambdaController, workflowObject, currentState, stateTransition, inGUI) {
   const numberOfStates = workflowObject.States[currentState.StateName].Branches.length;
   let completeStates = 0;
   const resultArray = [];
   workflowObject.States[currentState.StateName].Branches.forEach(
     (branch, index) => {
-      startWorkflow(awsLambdaController, workflowObject.States[currentState.StateName].Branches[index], currentState.StateData, stateComplete.bind(null, index));
+      startWorkflow(awsLambdaController, workflowObject.States[currentState.StateName].Branches[index], currentState.StateData, stateComplete.bind(null, index), inGUI);
     }
   );
   function stateComplete(stateIndex, data) {
@@ -263,18 +286,19 @@ function executeChoice(workflowObject, currentState, stateTransition) {
       }
     }
   }
+  const nextState = {StateData: currentState.StateData};
   const choiceArray = workflowObject.States[currentState.StateName].Choices;
   for (let i = 0; i < choiceArray.length; i++) {
     if (evaluateChoice(choiceArray[i])) {
-      currentState.StateName = choiceArray[i].Next;
+      nextState.StateName = choiceArray[i].Next;
       return currentState;
     }
   }
-  currentState.StateName = workflowObject.States[currentState.StateName].Default;
+  nextState.StateName = workflowObject.States[currentState.StateName].Default;
   if (!currentState.StateName) {
     throw new Error('No default choice state to go to.');
   }
-  return currentState;
+  return nextState;
 }
 
 function testWorkflow() {
@@ -284,7 +308,7 @@ function testWorkflow() {
 //testWorkflow();
 
 const orcha = {
-  executeWorkflow: executeWorkflow
+  executeWorkflow, executeWorkflowParsed
 };
 
 module.exports = orcha;
