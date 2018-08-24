@@ -1,8 +1,8 @@
 # Orcha
 
-Website (www.orcha.org), npm package, and application coming soon! Please stay tuned.
-
 AWS Lambda Orchestrator. Allows you to give a JSON workflow file written in the Amazon States Language, and execute lambda functions based on your workflow. You can open your workflow in the UI to see a diagram of your workflow. Executing your workflow requires that you have already created those lambda functions in AWS and have access to them.
+
+Website (www.orcha.org), npm package, and application coming soon! Please stay tuned.
 
 ## Prerequisites
 
