@@ -4,18 +4,31 @@
 
 const mermaid = require('mermaid');
 const { ipcRenderer } = require('electron');
-const { startWorkFlow } = require('./parser');
+const Florender = require('./parser');
 
 mermaid.initialize({ startOnLoad: true });
 
 const mermaidEl = document.querySelector('.mermaid');
+const changeButtonEl = document.querySelector('.change-color');
+
+changeButtonEl.addEventListener('click', () => {
+  ipcRenderer.send('noodz', 'addTwoArrays', 'red');
+});
+
+let florender;
 
 ipcRenderer.on('ping', (event, flow) => {
-  const output = startWorkFlow(flow);
+  florender = new Florender(flow, mermaidEl);
+  const output = florender.startWorkFlow(flow);
 
-  console.log(output);
-
-  mermaid.render('theGraph', output, function(svgCode) {
+  mermaid.render('theGraph', output, (svgCode) => {
     mermaidEl.innerHTML = svgCode;
   });
+});
+
+ipcRenderer.on('render', (event, func, color) => {
+  mermaidEl.removeAttribute('data-processed');
+  const output = florender.setColor(func, color);
+  mermaidEl.innerHTML = output;
+  mermaid.init(undefined, mermaidEl);
 });

@@ -3,26 +3,24 @@ const {
   app, BrowserWindow, Menu, dialog, ipcMain,
 } = require('electron');
 require('electron-reload')(__dirname);
+
 const fs = require('fs');
-const path = require('path');
 
 // In main process.
-ipcMain.on('asynchronous-message', (event, arg) => {
-  console.log(arg); // prints "ping"
-  event.sender.send('asynchronous-reply', 'pong');
-});
 
-ipcMain.on('synchronous-message', (event, arg) => {
-  console.log(arg); // prints "ping"
-  event.returnValue = 'pong';
-});
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
 
 function createWindow() {
   // Create the browser window.
-  mainWindow = new BrowserWindow({ width: 1920, height: 1440 });
+  mainWindow = new BrowserWindow({
+    width: 1920,
+    height: 1440,
+    options: {
+      fullscreen: true,
+    },
+  });
 
   // and load the index.html of the app.
   mainWindow.loadFile('client/index.html');
@@ -65,6 +63,10 @@ function setMainMenu() {
 
   Menu.setApplicationMenu(menu);
 }
+
+ipcMain.on('noodz', (event, func, color) => {
+  mainWindow.webContents.send('render', func, color);
+});
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
