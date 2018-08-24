@@ -1,5 +1,6 @@
 # Orcha
 
+Website (www.orcha.org), npm package, and application coming soon! Please stay tuned.
 AWS Lambda Orchestrator. Allows you to give a JSON workflow file written in the Amazon States Language, and execute lambda functions based on your workflow. You can open your workflow in the UI to see a diagram of your workflow. Executing your workflow requires that you have already created those lambda functions in AWS and have access to them.
 
 ## Prerequisites
@@ -23,6 +24,8 @@ npm install
 ## Creating workflows
 
 The workflow files should be written in the [Amazon States Language](https://docs.aws.amazon.com/step-functions/latest/dg/concepts-amazon-states-language.html).
+The only difference between the workflow format and ASL is in the workflow syntax, you specify
+a "LambdaToInvoke" (which is just the name of the lambda function) instead of an arn "Resource". 
 See test/json_workflow_file_test_cases for example workflow files. These examples are
 used by the unit tests in test/orcha.test.js
 
@@ -51,7 +54,8 @@ To run the UI run:
 npm run client
 ```
 
-You can then open a workflow file to view the workflow tree.
+You can then open a workflow file (Ctrl+O) to view the workflow tree. To run your workflow, enter a JSON object input into the input textbox, and run your workflow by entering Ctrl+R.
+You will see the lambda states change color as they are invoked and return from completion on AWS.
 
 ## Running the tests
 
