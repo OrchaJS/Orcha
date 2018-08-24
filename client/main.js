@@ -6,8 +6,6 @@ require('electron-reload')(__dirname);
 
 const fs = require('fs');
 
-// In main process.
-
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
@@ -52,7 +50,7 @@ function setMainMenu() {
             const openPath = dialog.showOpenDialog({ properties: ['openFile'] })[0];
             const content = fs.readFileSync(openPath);
             const configObject = JSON.parse(content);
-            mainWindow.webContents.send('ping', configObject);
+            mainWindow.webContents.send('openFile', configObject);
           },
         },
       ],
@@ -64,8 +62,11 @@ function setMainMenu() {
   Menu.setApplicationMenu(menu);
 }
 
-ipcMain.on('noodz', (event, func, color) => {
-  mainWindow.webContents.send('render', func, color);
+// Listener for clicking the run button on the front-end
+ipcMain.on('run', (event) => {
+  // This is where we should invoke the step function
+  // To rerender diagram, call below function, passing in function name and status
+  // mainWindow.webContents.send('rerender', func, status);
 });
 
 // This method will be called when Electron has finished

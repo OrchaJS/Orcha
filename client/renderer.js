@@ -12,12 +12,12 @@ const mermaidEl = document.querySelector('.mermaid');
 const changeButtonEl = document.querySelector('.change-color');
 
 changeButtonEl.addEventListener('click', () => {
-  ipcRenderer.send('noodz', 'addTwoArrays', 'red');
+  ipcRenderer.send('run');
 });
 
 let florender;
 
-ipcRenderer.on('ping', (event, flow) => {
+ipcRenderer.on('openFile', (event, flow) => {
   florender = new Florender(flow, mermaidEl);
   const output = florender.startWorkFlow(flow);
 
@@ -26,9 +26,9 @@ ipcRenderer.on('ping', (event, flow) => {
   });
 });
 
-ipcRenderer.on('render', (event, func, color) => {
+ipcRenderer.on('rerender', (event, func, status) => {
   mermaidEl.removeAttribute('data-processed');
-  const output = florender.setColor(func, color);
+  const output = florender.setColor(func, status);
   mermaidEl.innerHTML = output;
   mermaid.init(undefined, mermaidEl);
 });
