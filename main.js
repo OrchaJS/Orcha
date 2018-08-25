@@ -21,7 +21,7 @@ function createWindow() {
   });
 
   // and load the index.html of the app.
-  mainWindow.loadFile('client/index.html');
+  mainWindow.loadFile('dist/index.html');
 
   // Set main menu
   setMainMenu();
