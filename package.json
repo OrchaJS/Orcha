@@ -5,7 +5,8 @@
   "main": "client/main.js",
   "scripts": {
     "test": "jest test",
-    "client": "electron ."
+    "client": "electron .",
+    "compile_scss": "node-sass styles/main.scss client/css/main.css -w"
   },
   "author": "LambdaOrchestrator",
   "license": "ISC",
@@ -20,6 +21,7 @@
     "eslint-config-airbnb-base": "^13.1.0",
     "eslint-plugin-import": "^2.14.0",
     "jest": "^23.5.0",
-    "mermaid": "^8.0.0-rc.8"
+    "mermaid": "^8.0.0-rc.8",
+    "node-sass": "^4.9.3"
   }
 }
