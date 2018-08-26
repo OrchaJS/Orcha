@@ -11,6 +11,7 @@ class MyProvider extends Component {
     lambdaInput: null,
     lambdaOutput: null,
     executionHistory: [],
+    executionStatus: 'Not Started',
   };
 
   render() {

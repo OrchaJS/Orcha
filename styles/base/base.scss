@@ -6,11 +6,17 @@
   box-sizing: inherit;
 }
 
+// @font-face {
+//   font-family: 'ProximaNova-Black';
+//   src: url('../../assets/fonts/ProximaNova-Black.otf');
+// }
+
 html {
   font-size: 62.5%;
 }
 
 body {
   box-sizing: border-box;
-  background-color: #F8FAFC;
+  font-family: 'Open Sans';
+  background-color: #f8fafc;
 }
