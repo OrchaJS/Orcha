@@ -6,6 +6,11 @@ class MyProvider extends Component {
   state = {
     tab: '1',
     emoji: '\u{1F4A9}',
+    svgCode: null,
+    lambdaDetails: null,
+    lambdaInput: null,
+    lambdaOutput: null,
+    executionHistory: [],
   };
 
   render() {
