@@ -1,7 +1,6 @@
 class Florender {
-  constructor(flow, element) {
+  constructor(flow) {
     this.flow = flow;
-    this.element = element;
     this.store = {};
     this.output = null;
 

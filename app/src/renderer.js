@@ -2,32 +2,33 @@
 // be executed in the renderer process for that window.
 // All of the Node.js APIs are available in this process.
 
-// import mermaid from 'mermaid';
-// import { ipcRenderer } from 'electron';
+import mermaid from 'mermaid';
 import React from 'react';
 import { render } from 'react-dom';
-// import Florender from './parser';
+import Florender from './parser';
 import App from './components/App';
+import '../../styles/main.scss';
 
-// mermaid.initialize({ startOnLoad: true });
+const { ipcRenderer } = window.require('electron');
 
-// const mermaidEl = document.querySelector('.mermaid');
+mermaid.initialize({ startOnLoad: true });
+
 // const changeButtonEl = document.querySelector('.change-color');
 
 // changeButtonEl.addEventListener('click', () => {
 //   ipcRenderer.send('run');
 // });
 
-// let florender;
+let florender;
 
-// ipcRenderer.on('openFile', (event, flow) => {
-//   florender = new Florender(flow, mermaidEl);
-//   const output = florender.startWorkFlow(flow);
+ipcRenderer.on('openFile', (event, flow) => {
+  florender = new Florender(flow);
+  const output = florender.startWorkFlow(flow);
 
-//   mermaid.render('theGraph', output, (svgCode) => {
-//     mermaidEl.innerHTML = svgCode;
-//   });
-// });
+  mermaid.render('theGraph', output, (svgCode) => {
+    render(<App svgCode={svgCode} />, document.getElementById('app'));
+  });
+});
 
 // ipcRenderer.on('rerender', (event, func, status) => {
 //   mermaidEl.removeAttribute('data-processed');
@@ -36,4 +37,4 @@ import App from './components/App';
 //   mermaid.init(undefined, mermaidEl);
 // });
 
-render(<App />, document.getElementById('app'));
+render(<App svgCode={undefined} />, document.getElementById('app'));
