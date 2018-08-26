@@ -1,6 +1,6 @@
 import React from 'react';
 
-import PrimaryDisplay from './PrimaryDisplay';
+import PrimaryDisplay from './PrimaryDisplay/PrimaryDisplay';
 
 const Body = ({ svgCode }) => (
   <div className="body">
