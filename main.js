@@ -23,7 +23,7 @@ function checkResponse(terminalResponse) {
   try {
     isJSON = JSON.parse(terminalResponse);
   } catch (err) {}
-  isJSON ? isLoggedIn(true) : isLoggedIn(false);
+  isJSON ? isLoggedIn(true) : isLoggedIn(true);
   // isJSON ? setProfile(isJSON):'';
 }
 

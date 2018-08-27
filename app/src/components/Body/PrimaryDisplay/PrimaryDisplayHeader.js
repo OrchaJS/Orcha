@@ -3,7 +3,11 @@ import React from 'react';
 const PrimaryDisplayHeader = ({ tab, handleClickPrimaryTab }) => (
   <div className="primary-display__header">
     <div
-      className="primary-display__header-tab"
+      className={
+        tab === 'Diagram'
+          ? 'primary-display__header-tab primary-display__header-tab--active'
+          : 'primary-display__header-tab'
+      }
       onClick={() => {
         handleClickPrimaryTab('Diagram');
       }}
@@ -11,7 +15,11 @@ const PrimaryDisplayHeader = ({ tab, handleClickPrimaryTab }) => (
       <span className="heading-secondary">Diagram</span>
     </div>
     <div
-      className="primary-display__header-tab"
+      className={
+        tab === 'Input'
+          ? 'primary-display__header-tab primary-display__header-tab--active'
+          : 'primary-display__header-tab'
+      }
       onClick={() => {
         handleClickPrimaryTab('Input');
       }}
@@ -19,7 +27,11 @@ const PrimaryDisplayHeader = ({ tab, handleClickPrimaryTab }) => (
       <span className="heading-secondary">Input</span>
     </div>
     <div
-      className="primary-display__header-tab"
+      className={
+        tab === 'Output'
+          ? 'primary-display__header-tab primary-display__header-tab--active'
+          : 'primary-display__header-tab'
+      }
       onClick={() => {
         handleClickPrimaryTab('Output');
       }}

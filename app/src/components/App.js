@@ -1,14 +1,12 @@
 import React from 'react';
 
-import TopMenu from './TopMenu/TopMenu';
-import MainMenu from './MainMenu/MainMenu';
+import Menu from './Menu/Menu';
 import Body from './Body/Body';
 import { MyProvider } from '../provider/MyProvider';
 
 const App = ({ svgCode }) => (
   <MyProvider>
-    <TopMenu />
-    <MainMenu />
+    <Menu />
     <Body svgCode={svgCode} />
   </MyProvider>
 );
