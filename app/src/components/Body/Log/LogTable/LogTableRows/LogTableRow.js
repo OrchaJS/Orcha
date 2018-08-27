@@ -1,6 +1,6 @@
 import React from 'react';
 
-const LogTableBodyRow = ({
+const LogTableRow = ({
   id, type, step, resource, status, elapsedTime, timestamp,
 }) => (
   <tr className="log-table__body-row">
@@ -16,4 +16,4 @@ const LogTableBodyRow = ({
   </tr>
 );
 
-export default LogTableBodyRow;
+export default LogTableRow;

@@ -1,0 +1,58 @@
+table,
+th,
+td {
+  border: 1px solid $color-border;
+}
+
+.log {
+  text-align: left;
+
+  &__header {
+    height: 12%;
+    border-left: 1px solid $color-border;
+    border-top: 1px solid $color-border;
+    border-right: 1px solid $color-border;
+    padding-left: 3rem;
+
+    display: flex;
+    align-items: center;
+  }
+
+  &__table {
+    width: 100%;
+    padding: 0px;
+    border-collapse: collapse;
+
+    &-header {
+      color: $color-secondary;
+      width: 100%;
+
+      & > tr {
+        height: 5rem;
+
+        & > th {
+          height: inherit;
+          padding-left: 3rem;
+        }
+      }
+    }
+
+    // &-row {
+
+    //   &-id {
+    //   }
+    //   &-type {
+    //   }
+    //   &-step {
+    //   }
+    //   &-resource {
+    //   }
+    //   &-status {
+    //   }
+    //   &-elapsed-time {
+    //   }
+    //   &-timestamp {
+    //   }
+    // }
+  }
+}

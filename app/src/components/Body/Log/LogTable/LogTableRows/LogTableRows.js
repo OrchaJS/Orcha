@@ -1,18 +1,18 @@
-import React, { Fragment } from 'react';
+import React from 'react';
 
-import LogTableBodyRow from './LogTableBodyRow';
+import LogTableRow from './LogTableRow';
 import { MyContext } from '../../../../../provider/MyProvider';
 
-const LogTableBodyRows = () => (
+const LogTableRows = () => (
   <MyContext.Consumer>
     {({ state }) => (
       <tbody>
         {state.executionHistory.map(log => (
-          <LogTableBodyRow {...log} />
+          <LogTableRow {...log} />
         ))}
       </tbody>
     )}
   </MyContext.Consumer>
 );
 
-export default LogTableBodyRows;
+export default LogTableRows;
