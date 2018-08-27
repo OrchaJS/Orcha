@@ -11,7 +11,7 @@ const LogTableBodyRow = ({
     <td className="log-table__body-row-status">
       <span className={`badge--${status}`}>{status}</span>
     </td>
-    <td className="log-table__body-row-elapsedTime">{elapsedTime}</td>
+    <td className="log-table__body-row-elapsed-time">{elapsedTime}</td>
     <td className="log-table__body-row-timestamp">{timestamp}</td>
   </tr>
 );
