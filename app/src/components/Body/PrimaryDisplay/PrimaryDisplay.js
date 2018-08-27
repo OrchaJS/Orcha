@@ -7,10 +7,10 @@ import { MyContext } from '../../../provider/MyProvider';
 const PrimaryDisplay = ({ svgCode }) => (
   <div className="primary-display">
     <MyContext.Consumer>
-      {({ tab }) => (
+      {({ state }) => (
         <Fragment>
-          <PrimaryDisplayHeader tab={tab} />
-          <PrimaryDisplayBody svgCode={svgCode} tab={tab} />
+          <PrimaryDisplayHeader tab={state.primaryActiveTab} />
+          <PrimaryDisplayBody svgCode={svgCode} tab={state.primaryActiveTab} />
         </Fragment>
       )}
     </MyContext.Consumer>

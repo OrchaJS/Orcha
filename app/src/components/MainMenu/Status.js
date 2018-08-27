@@ -5,7 +5,7 @@ import { MyContext } from '../../provider/MyProvider';
 const Status = () => (
   <div className="status">
     <MyContext.Consumer>
-      {({ executionStatus }) => {
+      {({ state: { executionStatus } }) => {
         let color;
 
         switch (executionStatus) {

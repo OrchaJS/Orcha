@@ -1,5 +1,41 @@
-@import 'base/base';
+@import 'abstracts/variables';
 
-@import 'components/diagram';
+@import 'base/base';
+@import 'base/typography';
+
+@import 'components/body';
+@import 'components/legend';
 @import 'components/mainMenu';
+@import 'components/mermaid';
+@import 'components/primaryDisplay';
+@import 'components/secondaryDisplay';
 @import 'components/topMenu';
+
+.guide1 {
+  position: absolute;
+  height: 6rem;
+  width: 1rem;
+  background-color: pink;
+}
+.guide2 {
+  position: absolute;
+  top: 6rem;
+  height: 10rem;
+  width: 1rem;
+  background-color: red;
+}
+.guide3 {
+  position: absolute;
+  top: 22rem;
+  height: 41.5rem;
+  width: 1rem;
+  background-color: yellow;
+}
+
+.guide4 {
+  position: absolute;
+  top: 68.5rem;
+  height: 41.5rem;
+  width: 1rem;
+  background-color: orange;
+}

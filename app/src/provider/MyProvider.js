@@ -4,18 +4,29 @@ const MyContext = React.createContext();
 
 class MyProvider extends Component {
   state = {
-    tab: '1',
-    emoji: '\u{1F4A9}',
+    primaryActiveTab: 'Diagram',
+    secondaryActiveTab: 'Details',
     svgCode: null,
     lambdaDetails: null,
     lambdaInput: null,
     lambdaOutput: null,
     executionHistory: [],
     executionStatus: 'Not Started',
+    selectedLambda: null,
+  };
+
+  updateSelectedLambda = (lambda) => {
+    this.setState({ selectedLambda: lambda });
   };
 
   render() {
-    return <MyContext.Provider value={this.state}>{this.props.children}</MyContext.Provider>;
+    return (
+      <MyContext.Provider
+        value={{ state: this.state, updateSelectedLambda: this.updateSelectedLambda }}
+      >
+        {this.props.children}
+      </MyContext.Provider>
+    );
   }
 }
 

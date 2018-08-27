@@ -5,4 +5,3 @@ const Diagram = ({ svgCode }) => (
 );
 
 export default Diagram;
-

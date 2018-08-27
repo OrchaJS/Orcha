@@ -8,14 +8,14 @@ const PrimaryDisplayBody = ({ svgCode, tab }) => {
   let view;
 
   switch (tab) {
-    case '1':
+    case 'Diagram':
       view = <DiagramContainer svgCode={svgCode} />;
       break;
-    case '2':
-      view = <InputContainer svgCode={svgCode} />;
+    case 'Input':
+      view = <InputContainer />;
       break;
-    case '3':
-      view = <OutputContainer svgCode={svgCode} />;
+    case 'Output':
+      view = <OutputContainer />;
       break;
     default:
       throw new Error(('tab wtf', tab));

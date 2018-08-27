@@ -1,0 +1,9 @@
+.heading-secondary {
+  color: $color-secondary;
+  font-size: 1.4rem;
+  font-weight: bold;
+
+  &--active {
+    color: $color-primary;
+  }
+}
