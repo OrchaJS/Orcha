@@ -12,7 +12,7 @@ const PrimaryDisplayBody = ({ svgCode, tab }) => {
       view = <DiagramContainer svgCode={svgCode} />;
       break;
     case 'Input':
-      view = <InputContainer />;
+      view = <InputContainer text="poop" />;
       break;
     case 'Output':
       view = <OutputContainer />;
