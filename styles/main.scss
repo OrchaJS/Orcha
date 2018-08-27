@@ -16,17 +16,20 @@
 @import 'components/topMenu';
 
 .guide1 {
-  position: absolute;
+  position: fixed;
   height: 6rem;
   width: 1rem;
   background-color: pink;
+  z-index: 2;
 }
 .guide2 {
-  position: absolute;
+  position: fixed;
   top: 6rem;
   height: 10rem;
   width: 1rem;
   background-color: red;
+  z-index: 2;
+
 }
 .guide3 {
   position: absolute;

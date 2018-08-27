@@ -19,8 +19,11 @@
       align-items: center;
 
       &--active {
-        color: $color-primary;
-        border-bottom: 1px solid black;
+        border-bottom: 1px solid orange;
+
+        & > span {
+          color: $color-primary;
+        }
       }
     }
   }

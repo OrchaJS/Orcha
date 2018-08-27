@@ -6,12 +6,11 @@ const InputContainer = () => (
   <div className="input-container">
     <MyContext.Consumer>
       {({ state: { inputText }, handleOnChangeInput }) => (
-        <form>
-          <input
+        <form className="input-container__form">
+          <textarea
             type="text"
             className="input-container__textarea"
             onChange={(e) => {
-              console.log('hello');
               handleOnChangeInput(e.target.value);
             }}
             value={inputText}
