@@ -21,7 +21,6 @@ const SecondaryDisplay = () => (
               </Fragment>
             );
 
-            break;
           case 'Input':
             return (
               <Fragment>
@@ -31,7 +30,6 @@ const SecondaryDisplay = () => (
               </Fragment>
             );
 
-            break;
           case 'Output':
             return (
               <Fragment>
@@ -41,9 +39,8 @@ const SecondaryDisplay = () => (
               </Fragment>
             );
 
-            break;
           default:
-            throw new Error(('secondaryTab wtf', secondaryActiveTab));
+            throw new Error('secondaryTab wtf', secondaryActiveTab);
         }
       }}
     </MyContext.Consumer>

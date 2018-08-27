@@ -24,22 +24,31 @@ class MyProvider extends Component {
     this.setState({ primaryActiveTab: tab });
   };
 
+  handleClickSecondaryTab = (tab) => {
+    this.setState({ secondaryActiveTab: tab });
+  };
+
   handleOnChangeInput = (text) => {
     this.setState({ inputText: text });
   };
 
   render() {
     const {
-      updateSelectedLambda, handleClickPrimaryTab, handleOnChangeInput, state,
+      handleClickPrimaryTab,
+      handleClickSecondaryTab,
+      handleOnChangeInput,
+      updateSelectedLambda,
+      state,
     } = this;
 
     return (
       <MyContext.Provider
         value={{
-          state,
-          updateSelectedLambda,
           handleClickPrimaryTab,
+          handleClickSecondaryTab,
           handleOnChangeInput,
+          updateSelectedLambda,
+          state,
         }}
       >
         {this.props.children}
