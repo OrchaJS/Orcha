@@ -6,7 +6,6 @@ require('electron-reload')(__dirname);
 const fs = require('fs');
 const orcha = require('./src/orcha');
 
-
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
@@ -64,6 +63,18 @@ function setMainMenu() {
           click() {
             mainWindow.webContents.send('runWorkflow', configObject);
           },
+        },
+        {
+          label: 'Edit',
+          submenu: [
+            { label: 'Undo', accelerator: 'CmdOrCtrl+Z', selector: 'undo:' },
+            { label: 'Redo', accelerator: 'Shift+CmdOrCtrl+Z', selector: 'redo:' },
+            { type: 'separator' },
+            { label: 'Cut', accelerator: 'CmdOrCtrl+X', selector: 'cut:' },
+            { label: 'Copy', accelerator: 'CmdOrCtrl+C', selector: 'copy:' },
+            { label: 'Paste', accelerator: 'CmdOrCtrl+V', selector: 'paste:' },
+            { label: 'Select All', accelerator: 'CmdOrCtrl+A', selector: 'selectAll:' },
+          ],
         },
       ],
     },
