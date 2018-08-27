@@ -12,6 +12,7 @@
   "author": "orcha",
   "license": "ISC",
   "dependencies": {
+    "atob": "^2.1.2",
     "aws-sdk": "^2.291.0",
     "electron": "^2.0.0",
     "electron-reload": "^1.2.5",
