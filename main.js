@@ -7,9 +7,49 @@ const fs = require('fs');
 const orcha = require('./src/orcha');
 
 
+const exec = require("child_process").exec; 
+
+
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
+
+function credentialCheck(){
+ exec('aws sts get-caller-identity', function (err, stdout, stderr) { 
+   checkResponse(stdout)
+  });
+}
+
+function checkResponse(terminalResponse){
+  let isJSON;
+  try{
+    isJSON = JSON.parse(terminalResponse);
+  }
+  catch(err){
+  }
+  isJSON ? isLoggedIn(true):isLoggedIn(false);
+  // isJSON ? setProfile(isJSON):'';
+}
+
+// function setProfile(credentials){
+//   let Arn = credentials.Arn.split(":");
+//   let name = Arn[Arn.length-1].split("/")[1];
+//   global.username = name;
+// }
+
+function isLoggedIn(loggedIn){
+ 
+  if(loggedIn){
+    createWindow();
+  }
+  else{
+    mainWindow = new BrowserWindow({
+      width:300,
+      height:150
+    })
+    mainWindow.loadFile('public/noLogin.html')
+  }
+}
 
 function createWindow() {
   // Create the browser window.
@@ -20,10 +60,10 @@ function createWindow() {
       fullscreen: true,
     },
   });
-
+  
   // and load the index.html of the app.
   mainWindow.loadFile('dist/index.html');
-
+  
   // Set main menu
   setMainMenu();
 
@@ -70,7 +110,7 @@ function setMainMenu() {
   ];
 
   const menu = Menu.buildFromTemplate(template);
-
+  
   Menu.setApplicationMenu(menu);
 }
 
@@ -85,7 +125,7 @@ ipcMain.on('runWorkflow', (event, input) => {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', createWindow);
+app.on('ready', credentialCheck);
 
 // Quit when all windows are closed.
 app.on('window-all-closed', () => {
