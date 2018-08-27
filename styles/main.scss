@@ -4,6 +4,7 @@
 @import 'base/typography';
 
 @import 'components/body';
+@import 'components/card';
 @import 'components/diagramContainer';
 @import 'components/inputContainer';
 @import 'components/legend';
@@ -29,7 +30,6 @@
   width: 1rem;
   background-color: red;
   z-index: 2;
-
 }
 .guide3 {
   position: absolute;

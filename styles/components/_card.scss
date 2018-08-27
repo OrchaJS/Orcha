@@ -1,0 +1,56 @@
+.card {
+  &__header {
+    padding-left: 3rem;
+    height: 5rem;
+    border-bottom: 1px solid $color-border;
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+  }
+
+  &__body {
+    padding-left: 3rem;
+    display: none;
+
+    &--active {
+      height: 26.4rem;
+      border-bottom: 1px solid $color-border;
+    }
+  }
+}
+
+.detail-body {
+  padding: 3rem;
+
+  &__title {
+    font-weight: 700;
+    font-size: 1.2rem;
+    display: block;
+    margin-bottom: 1rem;
+    color: $color-secondary;
+  }
+
+  &__name {
+    display: block;
+    margin-bottom: 2rem;
+    font-weight: 600;
+    font-size: 1.2rem;
+  }
+
+  &__status {
+    display: block;
+    margin-bottom: 2rem;
+    font-weight: 600;
+    font-size: 1.2rem;
+  }
+
+  &__resource {
+    display: block;
+    margin-bottom: 2rem;
+    font-weight: 600;
+    font-size: 1.2rem;
+    color: $color-blue;
+    text-decoration: underline;
+  }
+}
