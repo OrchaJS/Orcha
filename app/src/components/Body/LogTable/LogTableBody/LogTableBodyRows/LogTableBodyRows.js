@@ -5,9 +5,9 @@ import { MyContext } from '../../../../../provider/MyProvider';
 
 const LogTableBodyRows = () => (
   <MyContext.Consumer>
-    {({ executionHistory }) => (
+    {({ state }) => (
       <tbody>
-        {executionHistory.map(log => (
+        {state.executionHistory.map(log => (
           <LogTableBodyRow {...log} />
         ))}
       </tbody>

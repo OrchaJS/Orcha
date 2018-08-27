@@ -1,19 +1,21 @@
-import React, { Component } from 'react';
+import React from 'react';
 
-const { ipcRenderer } = window.require('electron');
+import { MyContext } from '../../../../provider/MyProvider';
 
-class InputContainer extends Component {
-  state = {
-    text: '',
-  };
-
-  render() {
-    return (
-      <div className="input-container">
-        <textarea className="input-container__textarea">{text}</textarea>
-      </div>
-    );
-  }
-}
+const InputContainer = () => (
+  <div className="input-container">
+    <MyContext.Consumer>
+      {({ state: { inputText }, handleOnChangeInput }) => (
+        <textarea
+          className="input-container__textarea"
+          onChange={(e) => {
+            handleOnChangeInput(e.target.value);
+          }}
+          value={inputText}
+        />
+      )}
+    </MyContext.Consumer>
+  </div>
+);
 
 export default InputContainer;

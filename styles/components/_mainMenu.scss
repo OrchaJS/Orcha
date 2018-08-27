@@ -1,0 +1,67 @@
+.main-menu {
+  height: 10rem;
+  background-color: white;
+  border-bottom: 1px solid #ebeef4;
+
+  display: grid;
+
+  grid-template-columns: 55% 22.5% 22.5%;
+}
+
+.flowname,
+.status,
+.actions {
+  padding: 0 3rem;
+  border-right: 1px solid #ebeef4;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  &__text {
+    color: #000000;
+    font-size: 2.4rem;
+    font-weight: 700;
+  }
+
+  &__details {
+    color: #acaeb3;
+    font-size: 1.1rem;
+    font-weight: 500;
+    letter-spacing: 0.2px;
+  }
+}
+
+.status {
+  &__text {
+    &--green {
+      color: green;
+    }
+    &--blue {
+      color: blue;
+    }
+    &--red {
+      color: red;
+    }
+    &--grey {
+      color: grey;
+    }
+    &--black {
+      color: black;
+    }
+  }
+}
+
+.actions {
+  &:hover {
+    background-color: $color-green;
+    cursor: pointer;
+    .actions__details {
+      color: $color-primary;
+      // font-weight: 700;
+    }
+  }
+  &:focus {
+    outline: none;
+  }
+}

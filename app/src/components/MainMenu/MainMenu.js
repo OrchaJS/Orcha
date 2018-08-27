@@ -4,9 +4,9 @@ import Status from './Status';
 import Actions from './Actions';
 
 const MainMenu = () => (
-  <div className="top-menu">
-    <FlowName flowname="MyWorkFlowNameHere" />
-    <Status status="CurrentStatus" />
+  <div className="main-menu">
+    <FlowName flowname="FlowName" />
+    <Status />
     <Actions action="Run" />
   </div>
 );

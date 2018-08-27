@@ -1,6 +1,9 @@
 import React from 'react';
-import Logo from './Logo';
 
-const UserDetails = () => <div className="user-details">username</div>;
+const UserDetails = () => (
+  <div className="user-details">
+    <span className="user-details__text">Username</span>
+  </div>
+);
 
 export default UserDetails;

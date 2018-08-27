@@ -1,0 +1,22 @@
+*,
+*::after,
+*::before {
+  margin: 0;
+  padding: 0;
+  box-sizing: inherit;
+}
+
+// @font-face {
+//   font-family: 'ProximaNova-Black';
+//   src: url('../../assets/fonts/ProximaNova-Black.otf');
+// }
+
+html {
+  font-size: 62.5%;
+}
+
+body {
+  box-sizing: border-box;
+  font-family: 'Open Sans';
+  background-color: #f8fafc;
+}
