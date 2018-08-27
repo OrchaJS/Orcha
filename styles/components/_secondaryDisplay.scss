@@ -1,0 +1,27 @@
+.secondary-display {
+  border: 1px solid $color-border;
+  border-bottom: none;
+  height: 41.5rem;
+}
+
+.card {
+  &__header {
+    padding-left: 3rem;
+    height: 5rem;
+    border-bottom: 1px solid $color-border;
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+  }
+
+  &__body {
+    padding-left: 3rem;
+    height: 0px;
+
+    &--active {
+      height: 26.4rem;
+      border-bottom: 1px solid $color-border;
+    }
+  }
+}

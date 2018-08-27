@@ -1,0 +1,27 @@
+.primary-display {
+  border: 1px solid $color-border;
+  height: 41.5rem;
+
+  &__header {
+    height: 12%;
+    border-bottom: 1px solid $color-border;
+
+    display: flex;
+
+    &-tab {
+      padding-left: 3rem;
+      width: 20%;
+      border-right: 1px solid $color-border;
+      cursor: pointer;
+
+      display: flex;
+      align-items: center;
+    }
+  }
+
+  &__body {
+    padding: 1.5rem;
+    height: 88%;
+    overflow-y: scroll;
+  }
+}

@@ -3,11 +3,9 @@ const {
   app, BrowserWindow, Menu, dialog, ipcMain,
 } = require('electron');
 require('electron-reload')(__dirname);
-const orcha = require('../src/orcha');
-
 const fs = require('fs');
+const orcha = require('./src/orcha');
 
-// In main process.
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -24,7 +22,7 @@ function createWindow() {
   });
 
   // and load the index.html of the app.
-  mainWindow.loadFile('client/index.html');
+  mainWindow.loadFile('dist/index.html');
 
   // Set main menu
   setMainMenu();
@@ -57,7 +55,7 @@ function setMainMenu() {
             const openPath = dialog.showOpenDialog({ properties: ['openFile'] })[0];
             const content = fs.readFileSync(openPath);
             configObject = JSON.parse(content);
-            mainWindow.webContents.send('ping', configObject);
+            mainWindow.webContents.send('openFile', configObject);
           },
         },
         {
@@ -65,8 +63,8 @@ function setMainMenu() {
           accelerator: 'Ctrl+R',
           click() {
             mainWindow.webContents.send('runWorkflow', configObject);
-          }
-        }
+          },
+        },
       ],
     },
   ];

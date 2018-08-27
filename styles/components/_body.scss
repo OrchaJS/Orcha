@@ -1,0 +1,29 @@
+.body {
+  height: 100rem;
+  background-color: #f8fafc;
+  padding: 6rem;
+
+  display: grid;
+
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  grid-gap: 5rem;
+  grid-template-areas:
+    'primary secondary'
+    'log log';
+}
+
+.primary-display {
+  grid-area: primary;
+  background-color: white;
+}
+
+.secondary-display {
+  grid-area: secondary;
+  background-color: white;
+}
+
+.log-table {
+  grid-area: log;
+  background-color: white;
+}

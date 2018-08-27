@@ -1,0 +1,14 @@
+.input-container {
+  height: 100%;
+  background-color: black;
+
+  &__textarea {
+    border: none;
+    height: 100%;
+    width: 100%;
+
+    &:focus {
+      outline: none;
+    }
+  }
+}
