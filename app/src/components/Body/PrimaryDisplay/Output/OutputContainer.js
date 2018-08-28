@@ -1,11 +1,22 @@
 import React from 'react';
 
-const OutputContainer = ({ output }) => (
-  <div className="output-container">
-    <textarea className="output-container__textarea" readOnly>
-      {output}
-    </textarea>
-  </div>
+import { MyContext } from '../../../../provider/MyProvider';
+
+const OutputContainer = () => (
+  <MyContext.Consumer>
+    {({ state }) => {
+      const { outputText } = state;
+      console.log(outputText);
+
+      return (
+        <div className="output-container">
+          <textarea className="output-container__textarea" readOnly>
+            {outputText}
+          </textarea>
+        </div>
+      );
+    }}
+  </MyContext.Consumer>
 );
 
 export default OutputContainer;

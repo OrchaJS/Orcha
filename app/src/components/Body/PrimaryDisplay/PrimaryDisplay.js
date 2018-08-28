@@ -4,10 +4,10 @@ import PrimaryDisplayHeader from './PrimaryDisplayHeader';
 import PrimaryDisplayBody from './PrimaryDisplayBody';
 import { MyContext } from '../../../provider/MyProvider';
 
-const PrimaryDisplay = ({ svgCode }) => (
+const PrimaryDisplay = () => (
   <div className="primary-display">
     <MyContext.Consumer>
-      {({ state: { primaryActiveTab }, handleClickPrimaryTab }) => (
+      {({ state: { primaryActiveTab, svgCode }, handleClickPrimaryTab }) => (
         <Fragment>
           <PrimaryDisplayHeader
             tab={primaryActiveTab}

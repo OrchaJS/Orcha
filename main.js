@@ -4,6 +4,7 @@ const {
 } = require('electron');
 require('electron-reload')(__dirname);
 const fs = require('fs');
+const path = require('path');
 const orcha = require('./src/orcha');
 
 const exec = require('child_process').exec;
@@ -70,12 +71,11 @@ function createWindow() {
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
     mainWindow = null;
-    // not sure if we need to do this
-    configObject = null;
   });
 }
 
 let configObject;
+let jsonPath;
 
 function setMainMenu() {
   const template = [
@@ -84,17 +84,18 @@ function setMainMenu() {
       submenu: [
         {
           label: 'Open File',
-          accelerator: 'Ctrl+O',
+          accelerator: 'CmdOrCtrl+O',
           click() {
-            const openPath = dialog.showOpenDialog({ properties: ['openFile'] })[0];
-            const content = fs.readFileSync(openPath);
+            jsonPath = dialog.showOpenDialog({ properties: ['openFile'] })[0];
+            const flowname = path.basename(jsonPath, '.json');
+            const content = fs.readFileSync(jsonPath);
             configObject = JSON.parse(content);
-            mainWindow.webContents.send('openFile', configObject);
+            mainWindow.webContents.send('openFile', { configObject, flowname });
           },
         },
         {
           label: 'Run Workflow',
-          accelerator: 'Ctrl+R',
+          accelerator: 'CmdOrCtrl+R',
           click() {
             mainWindow.webContents.send('runWorkflow', configObject);
           },
@@ -126,6 +127,31 @@ ipcMain.on('changeColor', (event, func, color) => {
 
 ipcMain.on('runWorkflow', (event, input) => {
   mainWindow.webContents.send('runWorkflow', configObject, input);
+});
+
+ipcMain.on('run', (event, workflowInput) => {
+  console.log(workflowInput);
+
+  if (jsonPath) {
+    const configObject = {
+      jsonPath,
+      region: 'us-east-1',
+      workflowInput: JSON.parse(workflowInput),
+      statusUpdateCallback: (data) => {
+        console.log('LAMBDA STUFF', JSON.stringify(data));
+        mainWindow.webContents.send('statusUpdate', data);
+      },
+      endOfExecutionCallback: (data) => {
+        console.log('END OF WORKFLOW', JSON.stringify(data));
+        mainWindow.webContents.send('endOfExecution', data);
+      },
+      errorCallback: () => {
+        console.log('errorCallback');
+      },
+    };
+
+    orcha.executeWorkflow(configObject);
+  }
 });
 
 // This method will be called when Electron has finished
