@@ -2,7 +2,8 @@
   height: 10rem;
   background-color: white;
   border-bottom: 1px solid #ebeef4;
-
+  box-shadow: 1px 1px 20px 0px rgba(0,0,0,0.08);
+  
   display: grid;
 
   grid-template-columns: 55% 22.5% 22.5%;
@@ -65,7 +66,7 @@
     cursor: pointer;
     .actions__details {
       color: $color-primary;
-      // font-weight: 700;
+      font-weight: 700;
     }
   }
   &:focus {

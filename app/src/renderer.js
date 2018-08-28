@@ -37,16 +37,32 @@ ipcRenderer.on('openFile', (event, { configObject, flowname }) => {
 
 ipcRenderer.on('statusUpdate', (event, log) => {
   console.log(log);
+  const {
+    Type: type, id, elapsedTime, Input: input, Step: step, lambdaURL, cloudURL,
+  } = log;
+
   if (store.executionHistory === undefined) {
     store.executionHistory = [];
   }
 
-  store.executionHistory.push(log);
+  if (store.nodes === undefined) {
+    store.nodes = {};
+  }
+
+  store.executionHistory.push({
+    type,
+    id,
+    elapsedTime,
+    input,
+    step,
+    lambdaURL,
+    cloudURL,
+  });
   render(<App {...store} />, document.getElementById('app'));
 });
 
 ipcRenderer.on('endOfExecution', (event, {
-  executionStatus, output, id, elapsedTime, Input,
+  executionStatus, output, id, elapsedTime,
 }) => {
   store.executionStatus = executionStatus;
   store.outputText = JSON.stringify(output, undefined, 2);

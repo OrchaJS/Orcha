@@ -1,21 +1,34 @@
-table,
 th,
 td {
-  border: 1px solid $color-border;
+  padding-left: 3rem;
+  height: inherit;
+}
+
+tr {
+  height: 5rem;
+  border-top: 1px solid $color-border;
+  border-bottom: 1px solid $color-border;
 }
 
 .log {
   text-align: left;
+  height: 100%;
+  border: 1px solid $color-border;
+  border-radius: 4px;
 
   &__header {
     height: 12%;
-    border-left: 1px solid $color-border;
-    border-top: 1px solid $color-border;
-    border-right: 1px solid $color-border;
     padding-left: 3rem;
-
+    background-color: rgba(189, 189, 189, 0.08);
+    color: $color-primary;
     display: flex;
     align-items: center;
+  }
+
+  &__container {
+    height: 88%;
+
+    overflow: scroll;
   }
 
   &__table {
@@ -27,19 +40,13 @@ td {
       color: $color-secondary;
       width: 100%;
       user-select: none;
+      font-size: 1.2rem;
+    }
 
-      & > tr {
-        height: 5rem;
-
-        & > th {
-          height: inherit;
-          padding-left: 3rem;
-        }
-      }
+    &-rows {
     }
 
     // &-row {
-
     //   &-id {
     //   }
     //   &-type {

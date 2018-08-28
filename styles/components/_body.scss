@@ -1,5 +1,5 @@
 .body {
-  background-color: #f8fafc;
+  background-color: #F8FAFC ;
   padding: 22rem 6rem 6rem 6rem;
 
   display: grid;
@@ -25,4 +25,5 @@
 .log {
   grid-area: log;
   background-color: white;
+  box-shadow: 0 2px 5px 0 rgba(0,0,0,0.08);
 }

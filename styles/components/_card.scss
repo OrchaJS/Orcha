@@ -4,6 +4,7 @@
     height: 5rem;
     border-bottom: 1px solid $color-border;
     cursor: pointer;
+    background-color: rgba(189, 189, 189, 0.08);
 
     display: flex;
     align-items: center;
@@ -12,6 +13,7 @@
   &__body {
     padding-left: 3rem;
     display: none;
+
 
     &--active {
       height: 26.4rem;

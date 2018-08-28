@@ -2,6 +2,9 @@
   border: 1px solid $color-border;
   border-bottom: none;
   height: 41.5rem;
+  box-shadow: 1px 1px 20px 0px rgba(0,0,0,0.08);
+  border-radius: 4px;
+  overflow: hidden;
 }
 
 .step-textarea {
