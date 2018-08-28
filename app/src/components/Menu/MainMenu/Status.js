@@ -1,6 +1,6 @@
 import React, { Fragment } from 'react';
 
-import { MyContext } from '../../provider/MyProvider';
+import { MyContext } from '../../../provider/MyProvider';
 
 const Status = () => (
   <div className="status">

@@ -1,13 +1,24 @@
-import React from 'react';
+import React, { Fragment } from 'react';
 
 import CardHeader from './CardHeader';
+import { MyContext } from '../../../../provider/MyProvider';
 
-const Card = ({ title, text, active }) => (
+const Card = ({ title, render }) => (
   <div className="card">
-    <CardHeader title={title} />
-    <div className={`${active ? 'card__body--active' : 'card__body'}`}>
-      <span className="card__text">{text}</span>
-    </div>
+    <MyContext.Consumer>
+      {({ state: { lambdaDetails, secondaryActiveTab }, handleClickSecondaryTab }) => (
+        <Fragment>
+          <CardHeader
+            title={title}
+            secondaryActiveTab={secondaryActiveTab}
+            handleClickSecondaryTab={handleClickSecondaryTab}
+          />
+          <div className={`${title === secondaryActiveTab ? 'card__body--active' : 'card__body'}`}>
+            {render(lambdaDetails)}
+          </div>
+        </Fragment>
+      )}
+    </MyContext.Consumer>
   </div>
 );
 

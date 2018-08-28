@@ -1,10 +1,10 @@
 import React from 'react';
 
-import LogTableBodyRows from './LogTableBodyRows/LogTableBodyRows';
+import LogTableRows from './LogTableRows/LogTableRows';
 
-const LogTableBody = () => (
-  <table className="log-table__body">
-    <thead className="log-table__body-header">
+const LogTable = () => (
+  <table className="log__table">
+    <thead className="log__table-header">
       <tr>
         <th>ID</th>
         <th>Type</th>
@@ -15,8 +15,8 @@ const LogTableBody = () => (
         <th>Timestamp</th>
       </tr>
     </thead>
-    <LogTableBodyRows />
+    <LogTableRows />
   </table>
 );
 
-export default LogTableBody;
+export default LogTable;

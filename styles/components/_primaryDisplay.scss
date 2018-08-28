@@ -1,6 +1,5 @@
 .primary-display {
   border: 1px solid $color-border;
-  height: 41.5rem;
 
   &__header {
     height: 12%;
@@ -9,6 +8,7 @@
     display: flex;
 
     &-tab {
+      color: $color-secondary;
       padding-left: 3rem;
       width: 20%;
       border-right: 1px solid $color-border;
@@ -16,6 +16,14 @@
 
       display: flex;
       align-items: center;
+
+      &--active {
+        border-bottom: 1px solid orange;
+
+        & > span {
+          color: $color-primary;
+        }
+      }
     }
   }
 

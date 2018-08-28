@@ -4,10 +4,13 @@
 @import 'base/typography';
 
 @import 'components/body';
+@import 'components/card';
 @import 'components/diagramContainer';
 @import 'components/inputContainer';
 @import 'components/legend';
+@import 'components/log';
 @import 'components/mainMenu';
+@import 'components/menu';
 @import 'components/mermaid';
 @import 'components/outputContainer';
 @import 'components/primaryDisplay';
@@ -15,17 +18,19 @@
 @import 'components/topMenu';
 
 .guide1 {
-  position: absolute;
+  position: fixed;
   height: 6rem;
   width: 1rem;
   background-color: pink;
+  z-index: 2;
 }
 .guide2 {
-  position: absolute;
+  position: fixed;
   top: 6rem;
   height: 10rem;
   width: 1rem;
   background-color: red;
+  z-index: 2;
 }
 .guide3 {
   position: absolute;

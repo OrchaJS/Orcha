@@ -1,49 +1,37 @@
-import React, { Fragment } from 'react';
+import React from 'react';
 
 import Card from './Card/Card';
-import { MyContext } from '../../../provider/MyProvider';
+import DetailBody from './Card/DetailBody';
 
 const SecondaryDisplay = () => (
   <div className="secondary-display">
-    <MyContext.Consumer>
-      {({
-        state: {
-          lambdaDetails, lambdaInput, lambdaOutput, secondaryActiveTab,
-        },
-      }) => {
-        switch (secondaryActiveTab) {
-          case 'Details':
-            return (
-              <Fragment>
-                <Card title="Details" text={lambdaDetails} active />
-                <Card title="Input" text={lambdaInput} active={false} />
-                <Card title="Output" text={lambdaOutput} active={false} />
-              </Fragment>
-            );
-
-          case 'Input':
-            return (
-              <Fragment>
-                <Card title="Details" text={lambdaDetails} active={false} />
-                <Card title="Input" text={lambdaInput} active />
-                <Card title="Output" text={lambdaOutput} active={false} />
-              </Fragment>
-            );
-
-          case 'Output':
-            return (
-              <Fragment>
-                <Card title="Details" text={lambdaDetails} active={false} />
-                <Card title="Input" text={lambdaInput} active={false} />
-                <Card title="Output" text={lambdaOutput} active />
-              </Fragment>
-            );
-
-          default:
-            throw new Error('secondaryTab wtf', secondaryActiveTab);
-        }
-      }}
-    </MyContext.Consumer>
+    <Card
+      title="Details"
+      render={() => (
+        <DetailBody
+          name="ParallelMeUpFam"
+          status="Running"
+          arn="arn:aws:elasticbeanstalk:us-east-1:123456789012:environment:123456789012/My_App/My_Environment"
+        />
+      )}
+      active
+    />
+    <Card
+      title="Input"
+      render={() => (
+        <textarea className="step-textarea" readOnly>
+          placeholder
+        </textarea>
+      )}
+    />
+    <Card
+      title="Output"
+      render={() => (
+        <textarea className="step-textarea" readOnly>
+          placeholder
+        </textarea>
+      )}
+    />
   </div>
 );
 
