@@ -5,13 +5,14 @@
 import mermaid from 'mermaid';
 import React from 'react';
 import { render } from 'react-dom';
+
 import Florender from './parser';
 import App from './components/App';
 import '../../styles/main.scss';
 
 const { ipcRenderer } = window.require('electron');
 
-mermaid.initialize({ startOnLoad: true });
+// mermaid.initialize({ startOnLoad: true });
 
 // const changeButtonEl = document.querySelector('.change-color');
 
@@ -34,17 +35,23 @@ ipcRenderer.on('openFile', (event, { configObject, flowname }) => {
   });
 });
 
-ipcRenderer.on('endOfExecution', (event, { executionStatus, output, id, elapsedTime, Input }) => {
+ipcRenderer.on('statusUpdate', (event, log) => {
+  console.log(log);
+  if (store.executionHistory === undefined) {
+    store.executionHistory = [];
+  }
+
+  store.executionHistory.push(log);
+  render(<App {...store} />, document.getElementById('app'));
+});
+
+ipcRenderer.on('endOfExecution', (event, {
+  executionStatus, output, id, elapsedTime, Input,
+}) => {
   store.executionStatus = executionStatus;
   store.outputText = JSON.stringify(output, undefined, 2);
   render(<App {...store} />, document.getElementById('app'));
 });
-
-// ipcRenderer.on('runWorkflow', (event, flow, input) => {
-//   orcha.executeWorkflowParsed(flow, input, 'us-east-1', (data) => {
-//     alert(JSON.stringify(data));
-//   });
-// });
 
 ipcRenderer.on('render', (event, func, status) => {
   mermaidEl.removeAttribute('data-processed');
