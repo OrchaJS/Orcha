@@ -2,23 +2,13 @@
 
 const AWS = require('aws-sdk');
 const fs = require('fs');
-const atob = require('atob');
-// const { ipcRenderer } = require('electron');
-
 
 const maxInvocations = 20;
-const globalWorkflowState = {
-  awsLambdaController,
-  currentInvocations,
-  lambdaUpdateCallback,
-  region,
-  handleErrors,
-  endOfExecutionCallback
-};
+const globalWorkflowState = {};
 
 // read in the users JSON workflow file and start executing the workflow
 function executeWorkflow(configObject) {
-  const { jsonPath, region, workflowInput, lambdaUpdateCallback, endOfExecutionCallback, handleErrors } = configObject;
+  const { jsonPath, region, workflowInput, statusUpdateCallback, endOfExecutionCallback, errorCallback } = configObject;
   const workflowObject = (jsonPath) ? JSON.parse(fs.readFileSync(jsonPath)) : configObject.workflowObject;
   if (!jsonPath && !workflowObject) {
     throw new Error("Please specify a path to your JSON workflow.")
@@ -32,31 +22,19 @@ function executeWorkflow(configObject) {
   AWS.config.update({ region: region });
   const awsLambdaController = new AWS.Lambda();
   globalWorkflowState.currentInvocations = 0;
-  globalWorkflowState.lambdaUpdateCallback = lambdaUpdateCallback;
+  globalWorkflowState.statusUpdateCallback = statusUpdateCallback;
   globalWorkflowState.region = region;
-  globalWorkflowState.handleErrors = handleErrors;
+  globalWorkflowState.errorCallback = errorCallback;
   globalWorkflowState.awsLambdaController = awsLambdaController;
   globalWorkflowState.endOfExecutionCallback = endOfExecutionCallback;
+  globalWorkflowState.id = 1;
+  globalWorkflowState.workflowInput = workflowInput;
+  globalWorkflowState.startTime = Date.now();
+  sendStatusUpdate({
+    Type: 'ExecutionStarted'
+  });
   startWorkflow(workflowObject, workflowInput, endOfExecutionCallback);
 }
-
-// same as executeWorkflow but file has already been parsed into json
-// some duplication of code here, will refactor soon.
-// function executeWorkflowParsed({ workflowObject, workflowInput, region, lambdaUpdateCallback, usersCallback }) {
-//   currentInvocations = 0;
-//   if (!workflowObject) {
-//     throw new Error('JSON Workflow object is empty or invalid');
-//   }
-//   if (!region) {
-//       throw new Error('Must specify an AWS region (e.g. \'us-east-1\')');
-//     }
-//   if (!usersCallback) {
-//     throw new Error('Please specify a callback function.');
-//   }
-//   AWS.config.update({ region: region });
-//   const awsLambdaController = new AWS.Lambda();
-//   startWorkflow(awsLambdaController, workflowObject, workflowInput, usersCallback, true);
-// }
 
 // Execute the workflow. Note that this may not be the entire JSON file.
 // It may be the entire workflow, but it could also be called by executeParallel,
@@ -70,8 +48,33 @@ function startWorkflow(workflowObject, workflowInput, endOfWorkflowCallback) {
     StateName: workflowObject.StartAt,
     StateData: workflowInput
   };
-  sendStatusUpdate('ExecutionStarted', startState);
   executeState(workflowObject, startState, endOfWorkflowCallback);
+}
+
+function sendStatusUpdate(statusObject) {
+  statusObject.id = globalWorkflowState.id;
+  statusObject.elapsedTime = Date.now() - globalWorkflowState.startTime;
+  globalWorkflowState.id++;
+  if (statusObject.Lambda) {
+    statusObject.lambdaURL = 'https://console.aws.amazon.com/lambda/home?region=' + globalWorkflowState.region + '#/functions/' + statusObject.Lambda;
+    statusObject.cloudURL = 'https://console.aws.amazon.com/cloudwatch/home?region=' + globalWorkflowState.region + '#logStream:group=/aws/lambda/' + statusObject.Lambda;
+  }
+  globalWorkflowState.statusUpdateCallback(statusObject);
+}
+
+function endWorkflow(endOfExecutionObject) {
+  endOfExecutionObject.id = globalWorkflowState.id;
+  endOfExecutionObject.elapsedTime = Date.now() - globalWorkflowState.startTime;
+  endOfExecutionObject.Input = globalWorkflowState.workflowInput;
+  if (endOfExecutionObject.executionStatus === 'Succeeded') {
+    globalWorkflowState.endOfExecutionCallback(endOfExecutionObject);
+  }
+  else if (globalWorkflowState.errorCallback) {
+    globalWorkflowState.errorCallback(endOfExecutionObject);
+  }
+  else {
+    throw new Error(endOfExecutionObject.exceptionMessage);
+  }
 }
 
 // executeState checks whether the state is a Task (e.g. Lambda Execution) state or
@@ -82,11 +85,18 @@ function executeState(workflowObject, state, endOfWorkflowCallback) {
   sendStatusUpdate({
     Type: 'TaskStateEntered',
     Input: state.StateData,
+    IsLambdaStatus: false,
     Step: state.StateName
   });
   function stateTransition(data, err) {
     if (err) {
-      sendStatusUpdate('LambdaFunctionFailed', state, err);
+      sendStatusUpdate({
+        Type: 'LambdaFunctionFailed',
+        Input: state.StateData,
+        Step: state.StateName,
+        Exception: err,
+        Lambda: workflowObject.States[currentState.StateName].LambdaToInvoke
+      });
       const stateObject = workflowObject.States[state.StateName];
       let retried = false;
       if (stateObject.Retry) {
@@ -104,7 +114,6 @@ function executeState(workflowObject, state, endOfWorkflowCallback) {
               const timesRetried = timesRetriedObject[err.errorType];
               const maxRetryAttempts = stateToRetry.Retry[i].MaxAttempts || 3;
               if (timesRetried === maxRetryAttempts) {
-                //throw new Error(`Exceeded Maximum Retry Attempts; Lambda ${stateToRetry.StateName} threw Error: ${err}`);
                 break;
               }
               if (timesRetried < maxRetryAttempts) {
@@ -130,9 +139,9 @@ function executeState(workflowObject, state, endOfWorkflowCallback) {
           }
         }
       }
+      let caught = false;
       if ((!retried) && stateObject.Catch) {
         const errors = stateObject.Catch;
-        let caught = false;
         for (let i = 0; i < errors.length; i++) {
           for (let j = 0; j < errors[i].ErrorEquals.length; j++) {
             if (err.errorType === errors[i].ErrorEquals[j]) {
@@ -142,6 +151,17 @@ function executeState(workflowObject, state, endOfWorkflowCallback) {
                 Error: err.errorType,
                 Cause: err.errorMessage
               };
+              sendStatusUpdate({
+                Type: 'ExceptionCaught',
+                Input: state.StateData,
+                Step: state.StateName,
+                Exception: err
+              });
+              sendStatusUpdate({
+                Type: 'TaskStateExited',
+                Output: state.StateData,
+                Step: state.StateName
+              });
               executeState(workflowObject, catchState, endOfWorkflowCallback);
               caught = true;
               break;
@@ -151,43 +171,46 @@ function executeState(workflowObject, state, endOfWorkflowCallback) {
             break;
           }
         }
-        if (!caught) {
-          //if (inGUI) ipcRenderer.send('changeColor', state.StateName, 'red');
-          sendStatusUpdate('TaskStateExited', state);
-          sendStatusUpdate('ExecutionFailed', state, err);
-          endWorkflow({
-            executionStatus: 'Failed',
-            exceptionMessage: `${err.errorType} not caught for state ${state.StateName}`
-          });
-        }
       }
-      else if (!retried) {
-        sendStatusUpdate('TaskStateExited', state);
-        sendStatusUpdate('ExecutionFailed', state, err);
+      else if (!caught && !retried) {
+        sendStatusUpdate({
+          Type: 'TaskStateExited',
+          Output: state.StateData,
+          Step: state.StateName
+        });
+        sendStatusUpdate({
+          Type: 'ExecutionFailed',
+          Input: state.StateData,
+          Step: state.StateName,
+          Exception: err
+        });
         endWorkflow({
           executionStatus: 'Failed',
           exceptionMessage: `${err.errorType} not caught for state ${state.StateName}`
         });
-        //if (inGUI) ipcRenderer.send('changeColor', state.StateName, 'red');
-        //throw new Error(`${err.errorType} not caught for state ${state.StateName}`);
       }
     }
     else if (!workflowObject.States[state.StateName].End) {
-      //if (inGUI) ipcRenderer.send('changeColor', state.StateName, 'green');
-      sendStatusUpdate('TaskStateExited', state, data);
+      sendStatusUpdate({
+        Type: 'TaskStateExited',
+        Output: data,
+        Step: state.StateName
+      });
       const nextState = {
         StateName: workflowObject.States[state.StateName].Next,
         StateData: data
       };
       executeState(workflowObject, nextState, endOfWorkflowCallback);
     } else {
-      //if (inGUI) ipcRenderer.send('changeColor', state.StateName, 'green');
-      sendStatusUpdate('TaskStateExited', state, data);
+      sendStatusUpdate({
+        Type: 'TaskStateExited',
+        Output: data,
+        Step: state.StateName
+      });
       endWorkflow({
         executionStatus: 'Succeeded',
         output: data
       });
-      //endOfExecutionCallback(data);
     }
   }
 
@@ -207,12 +230,20 @@ function executeState(workflowObject, state, endOfWorkflowCallback) {
       break;
     case 'Choice':
       const nextState = executeChoice(workflowObject, state);
-      //if (inGUI) ipcRenderer.send('changeColor', state.StateName, 'green');
-      sendStatusUpdate('TaskStateExited', state, state.StateData);
+      // sendStatusUpdate('TaskStateExited', state, state.StateData);
+      sendStatusUpdate({
+        Type: 'TaskStateExited',
+        Output: state.StateData,
+        Step: state.StateName
+      });
       executeState(workflowObject, nextState, endOfWorkflowCallback);
       break;
     case 'Succeed':
-      sendStatusUpdate('TaskStateExited', state, state.StateData);
+      sendStatusUpdate({
+        Type: 'TaskStateExited',
+        Output: state.StateData,
+        Step: state.StateName
+      });
       endWorkflow({
         executionStatus: 'Succeeded',
         output: data
@@ -223,7 +254,6 @@ function executeState(workflowObject, state, endOfWorkflowCallback) {
         executionStatus: 'Failed',
         exceptionMessage: `State type for ${state.StateName} missing or incorrect`
       });
-    // throw new Error(`State type for ${state.StateName} missing or incorrect`);
   }
 }
 
@@ -256,25 +286,35 @@ function executeTask(workflowObject, currentState, stateTransition) {
       exceptionMessage: 'Max invocations exceeded'
     });
   } else {
+    const lambdaName =  workflowObject.States[currentState.StateName].LambdaToInvoke;
     const paramsForCurrentLambda = {
-      FunctionName: workflowObject.States[currentState.StateName].LambdaToInvoke,
+      FunctionName: lambdaName,
       Payload: JSON.stringify(currentState.StateData)
       //,LogType: 'Tail'
     };
-    sendStatusUpdate('LambdaFunctionStarted', state);
+    sendStatusUpdate({
+      Type: 'LambdaFunctionStarted',
+      Input: currentState.stateData,
+      Lambda: lambdaName
+    });
     globalWorkflowState.awsLambdaController.invoke(paramsForCurrentLambda, (err, data) => {
-      if (data.FunctionError) {
-        const returnObject = JSON.parse(data.Payload);
-        stateTransition(paramsForCurrentLambda, returnObject);
+      if (err) {
+        stateTransition(paramsForCurrentLambda, err);
+      } else if (data.FunctionError) {
+        const parsedPayload = JSON.parse(data.Payload);
+        stateTransition(paramsForCurrentLambda, parsedPayload);
       } else {
         const parsedPayload = JSON.parse(data.Payload);
-        sendStatusUpdate('LambdaFunctionSucceeded', parsedPayload);
+        sendStatusUpdate({
+          Type: 'LambdaFunctionSucceeded',
+          Input: currentState.stateData,
+          Output: parsedPayload,
+          Lambda: lambdaName
+        });
         // console.log statements for debugging and display purposes in dev
-        console.log('lambda name', currentState.StateName);
-        console.log('lambda input', currentState.StateData);
-        //data.LogResult = atob(data.LogResult);
-        console.log('lambda output', data);
-        // console.log('this', this);
+        // console.log('lambda name', currentState.StateName);
+        // console.log('lambda input', currentState.StateData);
+        // console.log('lambda output', data);
         stateTransition(parsedPayload);
       }
     });
@@ -380,8 +420,10 @@ function testWorkflow() {
     jsonPath: '../test/json_workflow_file_test_cases/parallelChoice.json',
     workflowInput: { array: [-2, 3, 4] },
     region: 'us-east-1',
-    endOfExecutionCallback: x => console.log(x)
+    endOfExecutionCallback: x => console.log(x),
+    statusUpdateCallback: x => console.log(x)
   });
+  // const { jsonPath, region, workflowInput, statusUpdateCallback, endOfExecutionCallback, errorCallback } = configObject;
 }
 
 testWorkflow();
