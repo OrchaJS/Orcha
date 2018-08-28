@@ -38,7 +38,14 @@ ipcRenderer.on('openFile', (event, { configObject, flowname }) => {
 ipcRenderer.on('statusUpdate', (event, log) => {
   console.log(log);
   const {
-    Type: type, id, elapsedTime, Input: input, Step: step, lambdaURL, cloudURL,
+    Type: type,
+    id,
+    elapsedTime,
+    Input: input,
+    Step: step,
+    lambdaURL,
+    cloudURL,
+    currentTime: timestamp,
   } = log;
 
   if (store.executionHistory === undefined) {
@@ -57,17 +64,29 @@ ipcRenderer.on('statusUpdate', (event, log) => {
     step,
     lambdaURL,
     cloudURL,
+    timestamp,
   });
   render(<App {...store} />, document.getElementById('app'));
 });
 
-ipcRenderer.on('endOfExecution', (event, {
-  executionStatus, output, id, elapsedTime,
-}) => {
-  store.executionStatus = executionStatus;
-  store.outputText = JSON.stringify(output, undefined, 2);
-  render(<App {...store} />, document.getElementById('app'));
-});
+ipcRenderer.on(
+  'endOfExecution',
+  (event, {
+    executionStatus, output, id, elapsedTime, Input: input, currentTime,
+  }) => {
+    store.executionHistory.push({
+      executionStatus,
+      output,
+      id,
+      elapsedTime,
+      Input: input,
+      currentTime,
+    });
+    store.executionStatus = executionStatus;
+    store.outputText = JSON.stringify(output, undefined, 2);
+    render(<App {...store} />, document.getElementById('app'));
+  },
+);
 
 ipcRenderer.on('render', (event, func, status) => {
   mermaidEl.removeAttribute('data-processed');

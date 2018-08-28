@@ -44,23 +44,31 @@ tr {
     }
 
     &-rows {
+      font-size: 1.2rem;
+      color: $color-primary;
     }
 
-    // &-row {
-    //   &-id {
-    //   }
-    //   &-type {
-    //   }
-    //   &-step {
-    //   }
-    //   &-resource {
-    //   }
-    //   &-status {
-    //   }
-    //   &-elapsed-time {
-    //   }
-    //   &-timestamp {
-    //   }
-    // }
+    &-row {
+      &-id {
+      }
+      &-type {
+      }
+      &-step {
+      }
+      &-resource {
+      }
+      &-elapsed-time {
+      }
+      &-timestamp {
+      }
+      &-link {
+        text-decoration: none;
+
+        &:hover {
+          text-decoration: underline;
+          color: blue;
+        }
+      }
+    }
   }
 }

@@ -16,6 +16,7 @@
     "electron": "^2.0.0",
     "electron-reload": "^1.2.5",
     "mermaid": "^8.0.0-rc.8",
+    "moment": "^2.22.2",
     "react": "^16.4.2",
     "react-dom": "^16.4.2"
   },
