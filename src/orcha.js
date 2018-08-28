@@ -55,6 +55,7 @@ function startWorkflow(workflowObject, workflowInput, endOfWorkflowCallback) {
 function sendStatusUpdate(statusObject) {
   statusObject.id = globalWorkflowState.id;
   statusObject.elapsedTime = Date.now() - globalWorkflowState.startTime;
+  statusObject.currentTime = Date.now();
   globalWorkflowState.id++;
   if (statusObject.Lambda) {
     statusObject.lambdaURL = 'https://console.aws.amazon.com/lambda/home?region=' + globalWorkflowState.region + '#/functions/' + statusObject.Lambda;
@@ -67,6 +68,7 @@ function endWorkflow(endOfExecutionObject) {
   endOfExecutionObject.id = globalWorkflowState.id;
   endOfExecutionObject.elapsedTime = Date.now() - globalWorkflowState.startTime;
   endOfExecutionObject.Input = globalWorkflowState.workflowInput;
+  endOfExecutionObject.currentTime = Date.now();
   if (endOfExecutionObject.executionStatus === 'Succeeded') {
     globalWorkflowState.endOfExecutionCallback(endOfExecutionObject);
   }
