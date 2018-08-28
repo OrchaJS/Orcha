@@ -4,6 +4,7 @@ const MyContext = React.createContext();
 
 class MyProvider extends Component {
   state = {
+    flowname: 'Open file',
     primaryActiveTab: 'Diagram',
     secondaryActiveTab: 'Details',
     svgCode: null,
@@ -14,6 +15,7 @@ class MyProvider extends Component {
     executionStatus: 'Not Started',
     selectedLambda: null,
     inputText: '',
+    outputText: '',
   };
 
   updateSelectedLambda = (lambda) => {
@@ -31,6 +33,12 @@ class MyProvider extends Component {
   handleOnChangeInput = (text) => {
     this.setState({ inputText: text });
   };
+
+  componentWillReceiveProps(props) {
+    console.log('indidajflsdj');
+    console.log(props);
+    this.setState({ ...props });
+  }
 
   render() {
     const {

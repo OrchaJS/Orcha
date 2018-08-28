@@ -21,13 +21,23 @@ mermaid.initialize({ startOnLoad: true });
 
 let florender;
 
-ipcRenderer.on('openFile', (event, flow) => {
-  florender = new Florender(flow);
-  const output = florender.startWorkFlow(flow);
+const store = {};
+
+ipcRenderer.on('openFile', (event, { configObject, flowname }) => {
+  store.flowname = flowname;
+  florender = new Florender(configObject);
+  const output = florender.startWorkFlow();
 
   mermaid.render('theGraph', output, (svgCode) => {
-    render(<App svgCode={svgCode} />, document.getElementById('app'));
+    store.svgCode = svgCode;
+    render(<App {...store} />, document.getElementById('app'));
   });
+});
+
+ipcRenderer.on('endOfExecution', (event, { executionStatus, output, id, elapsedTime, Input }) => {
+  store.executionStatus = executionStatus;
+  store.outputText = JSON.stringify(output, undefined, 2);
+  render(<App {...store} />, document.getElementById('app'));
 });
 
 // ipcRenderer.on('runWorkflow', (event, flow, input) => {

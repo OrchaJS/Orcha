@@ -4,9 +4,9 @@ import PrimaryDisplay from './PrimaryDisplay/PrimaryDisplay';
 import SecondaryDisplay from './SecondaryDisplay/SecondaryDisplay';
 import Log from './Log/Log';
 
-const Body = ({ svgCode }) => (
+const Body = () => (
   <div className="body">
-    <PrimaryDisplay svgCode={svgCode} />
+    <PrimaryDisplay />
     <SecondaryDisplay />
     <Log />
   </div>

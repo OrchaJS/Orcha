@@ -32,6 +32,13 @@
   }
 }
 
+.flowname {
+  &__text {
+    user-select: all;
+    text-transform: capitalize;
+  }
+}
+
 .status {
   &__text {
     &--green {

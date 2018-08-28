@@ -4,10 +4,10 @@ import Menu from './Menu/Menu';
 import Body from './Body/Body';
 import { MyProvider } from '../provider/MyProvider';
 
-const App = ({ svgCode }) => (
-  <MyProvider>
+const App = props => (
+  <MyProvider {...props}>
     <Menu />
-    <Body svgCode={svgCode} />
+    <Body />
   </MyProvider>
 );
 
