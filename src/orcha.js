@@ -222,7 +222,7 @@ function executeState(workflowObject, state, endOfWorkflowCallback) {
     }
   }
 
-  if (workflowObject.States[state.StateName].Visited && (!states.Retrying)) {
+  if (workflowObject.States[state.StateName].Visited && (!state.Retrying)) {
     endWorkflow({
       executionStatus: 'Failed',
       exceptionMessage: `State ${state.StateName} has already been visited! There may be a cycle/infinite loop in your state transitions. Please check your JSON file.`
@@ -238,7 +238,6 @@ function executeState(workflowObject, state, endOfWorkflowCallback) {
       break;
     case 'Choice':
       const nextState = executeChoice(workflowObject, state);
-      // sendStatusUpdate('TaskStateExited', state, state.StateData);
       sendStatusUpdate({
         Type: 'TaskStateExited',
         Output: state.StateData,
@@ -415,7 +414,7 @@ function executeChoice(workflowObject, currentState, stateTransition) {
   for (let i = 0; i < choiceArray.length; i++) {
     if (evaluateChoice(choiceArray[i])) {
       nextState.StateName = choiceArray[i].Next;
-      return currentState;
+      return nextState;
     }
   }
   nextState.StateName = workflowObject.States[currentState.StateName].Default;
@@ -430,8 +429,8 @@ function executeChoice(workflowObject, currentState, stateTransition) {
 
 function testWorkflow() {
   executeWorkflow({
-    jsonPath: '../test/json_workflow_file_test_cases/parallel.json',
-    workflowInput: { array: [1, 3, 4] },
+    jsonPath: '../test/json_workflow_file_test_cases/parallelChoice.json',
+    workflowInput: { array: [1, 2, 3] },
     region: 'us-east-1',
     endOfExecutionCallback: x => console.log(x),
     statusUpdateCallback: x => console.log(x)
@@ -439,7 +438,7 @@ function testWorkflow() {
   // const { jsonPath, region, workflowInput, statusUpdateCallback, endOfExecutionCallback, errorCallback } = configObject;
 }
 
-// testWorkflow();
+testWorkflow();
 
 const orcha = {
   executeWorkflow
