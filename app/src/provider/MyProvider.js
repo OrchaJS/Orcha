@@ -18,27 +18,27 @@ class MyProvider extends Component {
     outputText: '',
   };
 
-  updateSelectedLambda = (lambda) => {
-    this.setState({ selectedLambda: lambda });
-  };
-
-  handleClickPrimaryTab = (tab) => {
-    this.setState({ primaryActiveTab: tab });
-  };
-
-  handleClickSecondaryTab = (tab) => {
-    this.setState({ secondaryActiveTab: tab });
-  };
-
-  handleOnChangeInput = (text) => {
-    this.setState({ inputText: text });
-  };
-
   componentWillReceiveProps(props) {
     console.log('indidajflsdj');
     console.log(props);
     this.setState({ ...props });
   }
+
+  updateSelectedLambda = (selectedLambda) => {
+    this.setState({ selectedLambda });
+  };
+
+  handleClickPrimaryTab = (primaryActiveTab) => {
+    this.setState({ primaryActiveTab });
+  };
+
+  handleClickSecondaryTab = (secondaryActiveTab) => {
+    this.setState({ secondaryActiveTab });
+  };
+
+  handleOnChangeInput = (inputText) => {
+    this.setState({ inputText });
+  };
 
   render() {
     const {
@@ -48,6 +48,8 @@ class MyProvider extends Component {
       updateSelectedLambda,
       state,
     } = this;
+
+    const { children } = this.props;
 
     return (
       <MyContext.Provider
@@ -59,7 +61,7 @@ class MyProvider extends Component {
           state,
         }}
       >
-        {this.props.children}
+        {children}
       </MyContext.Provider>
     );
   }

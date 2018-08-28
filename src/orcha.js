@@ -430,8 +430,8 @@ function executeChoice(workflowObject, currentState, stateTransition) {
 
 function testWorkflow() {
   executeWorkflow({
-    jsonPath: '../test/json_workflow_file_test_cases/parallelChoice.json',
-    workflowInput: { array: [-2, 4, 5] },
+    jsonPath: '../test/json_workflow_file_test_cases/parallel.json',
+    workflowInput: { array: [1, 3, 4] },
     region: 'us-east-1',
     endOfExecutionCallback: x => console.log(x),
     statusUpdateCallback: x => console.log(x)

@@ -5,9 +5,9 @@ const {
 require('electron-reload')(__dirname);
 const fs = require('fs');
 const path = require('path');
-const orcha = require('./src/orcha');
+const { exec } = require('child_process');
 
-const exec = require('child_process').exec;
+const orcha = require('./src/orcha');
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -21,6 +21,7 @@ function credentialCheck() {
 
 function checkResponse(terminalResponse) {
   let isJSON;
+
   try {
     isJSON = JSON.parse(terminalResponse);
   } catch (err) {}
@@ -123,10 +124,6 @@ function setMainMenu() {
 
 ipcMain.on('changeColor', (event, func, color) => {
   mainWindow.webContents.send('render', func, color);
-});
-
-ipcMain.on('runWorkflow', (event, input) => {
-  mainWindow.webContents.send('runWorkflow', configObject, input);
 });
 
 ipcMain.on('run', (event, workflowInput) => {
