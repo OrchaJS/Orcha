@@ -426,7 +426,7 @@ function testWorkflow() {
   // const { jsonPath, region, workflowInput, statusUpdateCallback, endOfExecutionCallback, errorCallback } = configObject;
 }
 
-testWorkflow();
+// testWorkflow();
 
 const orcha = {
   executeWorkflow

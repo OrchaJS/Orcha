@@ -5,7 +5,7 @@
   display: grid;
 
   grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 41.5rem);
   grid-gap: 5rem;
   grid-template-areas:
     'primary secondary'
