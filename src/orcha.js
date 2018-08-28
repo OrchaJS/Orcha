@@ -188,6 +188,7 @@ function executeState(workflowObject, state, endOfWorkflowCallback) {
           Exception: err
         });
         endWorkflow({
+          Type: 'ExecutionFailed',
           executionStatus: 'Failed',
           exceptionMessage: `${err.errorType} not caught for state ${state.StateName}`
         });
@@ -212,6 +213,7 @@ function executeState(workflowObject, state, endOfWorkflowCallback) {
       });
       if (endOfWorkflowCallback.finalFunction) {
         endWorkflow({
+          Type: 'ExecutionSucceeded',
           executionStatus: 'Succeeded',
           output: data
         });
@@ -224,6 +226,7 @@ function executeState(workflowObject, state, endOfWorkflowCallback) {
 
   if (workflowObject.States[state.StateName].Visited && (!state.Retrying)) {
     endWorkflow({
+      Type: 'ExecutionFailed',
       executionStatus: 'Failed',
       exceptionMessage: `State ${state.StateName} has already been visited! There may be a cycle/infinite loop in your state transitions. Please check your JSON file.`
     });
@@ -253,6 +256,7 @@ function executeState(workflowObject, state, endOfWorkflowCallback) {
       });
       if (endOfWorkflowCallback.finalFunction) {
         endWorkflow({
+          Type: 'ExecutionSucceeded',
           executionStatus: 'Succeeded',
           output: data
         });
@@ -263,6 +267,7 @@ function executeState(workflowObject, state, endOfWorkflowCallback) {
       break;
     default:
       endWorkflow({
+        Type: 'ExecutionFailed',
         executionStatus: 'Failed',
         exceptionMessage: `State type for ${state.StateName} missing or incorrect`
       });
@@ -294,6 +299,7 @@ function executeTask(workflowObject, currentState, stateTransition) {
   globalWorkflowState.currentInvocations++;
   if (globalWorkflowState.currentInvocations > maxInvocations) {
     endWorkflow({
+      Type: 'ExecutionFailed',
       executionStatus: 'Failed',
       exceptionMessage: 'Max invocations exceeded'
     });
@@ -355,6 +361,7 @@ function executeChoice(workflowObject, currentState, stateTransition) {
     } else {
       if (choiceObject.Variable.substring(0, 2) !== '$.' || choiceObject.Variable.length < 3) {
         endWorkflow({
+          Type: 'ExecutionFailed',
           executionStatus: 'Failed',
           exceptionMessage: `Invalid variable name ${choiceObject.Variable}. Variable names should be of the format $.Property_Name`
         });
@@ -401,6 +408,7 @@ function executeChoice(workflowObject, currentState, stateTransition) {
               return Date(variable) <= Date(choiceObject[prop]);
             default:
               endWorkflow({
+                Type: 'ExecutionFailed',
                 executionStatus: 'Failed',
                 exceptionMessage: `${prop} incorrect`
               });
@@ -420,6 +428,7 @@ function executeChoice(workflowObject, currentState, stateTransition) {
   nextState.StateName = workflowObject.States[currentState.StateName].Default;
   if (!currentState.StateName) {
     endWorkflow({
+      Type: 'ExecutionFailed',
       executionStatus: 'Failed',
       exceptionMessage: 'No default choice state to go to.'
     });
