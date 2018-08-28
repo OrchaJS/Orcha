@@ -13,7 +13,7 @@ const mockedLambdas = {
   squareRootArrayNumbers
 };
 
-const jsonWorkflowPaths = path.join(__dirname, './json_workflow_file_test_cases/');
+const jsonWorkflowPaths = path.join(__dirname, './test/json_workflow_file_test_cases/');
 const workflowPaths = {
   simple: path.join(jsonWorkflowPaths, 'simple.json'),
   parallel: path.join(jsonWorkflowPaths, 'parallel.json'),

@@ -33,6 +33,7 @@ function executeWorkflow(configObject) {
   sendStatusUpdate({
     Type: 'ExecutionStarted'
   });
+  endOfExecutionCallback.finalFunction = true;
   startWorkflow(workflowObject, workflowInput, endOfExecutionCallback);
 }
 
@@ -69,10 +70,10 @@ function endWorkflow(endOfExecutionObject) {
   if (endOfExecutionObject.executionStatus === 'Succeeded') {
     globalWorkflowState.endOfExecutionCallback(endOfExecutionObject);
   }
-  else if (globalWorkflowState.errorCallback) {
-    globalWorkflowState.errorCallback(endOfExecutionObject);
-  }
   else {
+    if (globalWorkflowState.errorCallback) {
+      globalWorkflowState.errorCallback(endOfExecutionObject);
+    }
     throw new Error(endOfExecutionObject.exceptionMessage);
   }
 }
@@ -207,10 +208,15 @@ function executeState(workflowObject, state, endOfWorkflowCallback) {
         Output: data,
         Step: state.StateName
       });
-      endWorkflow({
-        executionStatus: 'Succeeded',
-        output: data
-      });
+      if (endOfWorkflowCallback.finalFunction) {
+        endWorkflow({
+          executionStatus: 'Succeeded',
+          output: data
+        });
+      }
+      else {
+        endOfWorkflowCallback(data);
+      }
     }
   }
 
@@ -244,10 +250,15 @@ function executeState(workflowObject, state, endOfWorkflowCallback) {
         Output: state.StateData,
         Step: state.StateName
       });
-      endWorkflow({
-        executionStatus: 'Succeeded',
-        output: data
-      });
+      if (endOfWorkflowCallback.finalFunction) {
+        endWorkflow({
+          executionStatus: 'Succeeded',
+          output: data
+        });
+      }
+      else {
+        endOfWorkflowCallback(data);
+      }
       break;
     default:
       endWorkflow({
@@ -286,7 +297,7 @@ function executeTask(workflowObject, currentState, stateTransition) {
       exceptionMessage: 'Max invocations exceeded'
     });
   } else {
-    const lambdaName =  workflowObject.States[currentState.StateName].LambdaToInvoke;
+    const lambdaName = workflowObject.States[currentState.StateName].LambdaToInvoke;
     const paramsForCurrentLambda = {
       FunctionName: lambdaName,
       Payload: JSON.stringify(currentState.StateData)
