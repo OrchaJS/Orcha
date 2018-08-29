@@ -1,6 +1,6 @@
 import React from 'react';
 
-const input = '{"array":[1,2,3]}';
+const input = 'My Account';
 
 const UserDetails = () => (
   <div className="user-details">

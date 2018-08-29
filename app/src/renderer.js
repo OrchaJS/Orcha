@@ -72,15 +72,16 @@ ipcRenderer.on('statusUpdate', (event, log) => {
 ipcRenderer.on(
   'endOfExecution',
   (event, {
-    executionStatus, output, id, elapsedTime, Input: input, currentTime,
+    executionStatus, output, id, elapsedTime, Input: input, currentTime, Type: type,
   }) => {
     store.executionHistory.push({
       executionStatus,
       output,
       id,
       elapsedTime,
-      Input: input,
+      input,
       currentTime,
+      type,
     });
     store.executionStatus = executionStatus;
     store.outputText = JSON.stringify(output, undefined, 2);

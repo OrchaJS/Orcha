@@ -3,6 +3,8 @@ import React from 'react';
 import Card from './Card/Card';
 import DetailBody from './Card/DetailBody';
 
+const inputDemo = JSON.stringify({ array: [1, 2, 3] }, undefined, 2);
+
 const SecondaryDisplay = () => (
   <div className="secondary-display">
     <Card
@@ -20,7 +22,7 @@ const SecondaryDisplay = () => (
       title="Input"
       render={() => (
         <textarea className="step-textarea" readOnly>
-          placeholder
+          {inputDemo}
         </textarea>
       )}
     />
@@ -28,7 +30,7 @@ const SecondaryDisplay = () => (
       title="Output"
       render={() => (
         <textarea className="step-textarea" readOnly>
-          placeholder
+          {inputDemo}
         </textarea>
       )}
     />
