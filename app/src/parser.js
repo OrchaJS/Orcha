@@ -29,11 +29,11 @@ class Florender {
     this.getColor = (func, color) => `
       class ${func} ${color}`;
 
-    this.initializeFunc = ({ States: states }) => Object.keys(states).reduce(
-      (accum, key) => `
-          ${accum + key}`,
-      '',
-    );
+    this.initializeNodesInWorkFlow = ({ States: states }) => Object.keys(states).reduce((accum, key) => accum + this.initializeNode(key), '');
+
+    this.initializeNode = nodeId => `
+      ${nodeId}
+      click ${nodeId} handleOnClickNode`;
 
     this.executeTask = (state, currFunc, end) => {
       let output = '';
@@ -44,6 +44,8 @@ class Florender {
         output += this.drawLine(currFunc, state.Next);
       }
 
+      output += this.initializeNode(currFunc);
+
       return output;
     };
 
@@ -53,7 +55,7 @@ class Florender {
       subgraph ${funcName}`;
 
       branches.forEach((workFlow) => {
-        output += this.initializeFunc(workFlow);
+        output += this.initializeNodesInWorkFlow(workFlow);
       });
 
       output += `

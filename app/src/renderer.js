@@ -2,9 +2,9 @@
 // be executed in the renderer process for that window.
 // All of the Node.js APIs are available in this process.
 
-import mermaid from 'mermaid';
 import React from 'react';
 import { render } from 'react-dom';
+import mermaid from 'mermaid';
 
 import Florender from './parser';
 import App from './components/App';
@@ -12,31 +12,42 @@ import '../../styles/main.scss';
 
 const { ipcRenderer } = window.require('electron');
 
-// mermaid.initialize({ startOnLoad: true });
-
 // const changeButtonEl = document.querySelector('.change-color');
 
 // changeButtonEl.addEventListener('click', () => {
 //   ipcRenderer.send('run');
 // });
 
+mermaid.initialize({ htmlLabels: true, startOnLoad: false });
+
 let florender;
 
 const store = {};
 
+window.handleOnClickNode = (selectedLambda) => {
+  store.selectedLambda = selectedLambda;
+  render(<App {...store} />, document.getElementById('app'));
+};
+
 ipcRenderer.on('openFile', (event, { configObject, flowname }) => {
+  const mermaidEl = document.querySelector('.mermaid');
   store.flowname = flowname;
   florender = new Florender(configObject);
   const output = florender.startWorkFlow();
 
-  mermaid.render('theGraph', output, (svgCode) => {
-    store.svgCode = svgCode;
-    render(<App {...store} />, document.getElementById('app'));
-  });
+  mermaid.render(
+    'theGraph',
+    output,
+    (svgCode, bindFunctions) => {
+      store.svgCode = svgCode;
+      render(<App {...store} />, document.getElementById('app'));
+      bindFunctions(mermaidEl);
+    },
+    mermaidEl,
+  );
 });
 
 ipcRenderer.on('statusUpdate', (event, log) => {
-  console.log(log);
   const {
     Type: type,
     id,

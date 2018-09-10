@@ -14,12 +14,11 @@ class MyProvider extends Component {
     executionHistory: [],
     executionStatus: 'Not Started',
     selectedLambda: null,
-    inputText: '',
+    inputText: '{"array":[1,2,3]}',
     outputText: '',
   };
 
   componentWillReceiveProps(props) {
-    console.log('indidajflsdj');
     console.log(props);
     this.setState({ ...props });
   }
