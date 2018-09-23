@@ -49,9 +49,10 @@ Required arguments: workflowInput, region, endOfExecutionCallback, jsonPath OR w
 
 Optional arguments: statusUpdateCallback, errorCallback
 
-jsonPath is the path to your workflow, workflowInput is the input to your first lambda, region is the AWS region where your lambdas are, endOfExecutionCallback is a function
-that will run after your workflow is complete, workflowObject is a JSON workflow object that you can pass
-in instead of passing in the jsonPath argument. statusUpdateCallback is a callback function you can specify that will run after a status update in your workflow (such as a lambda function starting or ending). errorCallback is a callback function you can specify that will run if your workflow fails. Both statusUpdateCallback and errorCallback are optional, but recommended.
+jsonPath is the path to your workflow, workflowInput is the input to your first lambda, region is the AWS region where your lambdas are, endOfExecutionCallback is a function that will run after your workflow is complete, workflowObject is a JSON workflow object that you can pass in instead of passing in the jsonPath argument. 
+
+statusUpdateCallback is a callback function you can specify that will run after a status update in your workflow (such as a lambda function starting or ending). errorCallback is a callback function you can specify that will run if your workflow fails. Both statusUpdateCallback and errorCallback are optional, but recommended.
+
 An example of how you could run a workflow and log the result to the console:
 
 ```
