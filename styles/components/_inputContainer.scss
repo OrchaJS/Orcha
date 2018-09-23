@@ -1,0 +1,19 @@
+.input-container {
+  height: 100%;
+
+  &__form {
+    height: inherit;
+  }
+
+  &__textarea {
+    height: inherit;
+    resize: none;
+    border: none;
+    width: 100%;
+    padding: 1.5rem;
+
+    &:focus {
+      outline: none;
+    }
+  }
+}

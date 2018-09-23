@@ -1,0 +1,31 @@
+.legend {
+  position: absolute;
+  width: fit-content;
+  font-weight: 700;
+  font-size: 1rem;
+  user-select: none;
+
+  &__key {
+    padding-bottom: 0.5rem;
+
+    &-color {
+      display: inline-block;
+      height: 1rem;
+      width: 1rem;
+      margin-right: 1rem;
+
+      &--green {
+        background-color: $color-green;
+      }
+      &--red {
+        background-color: $color-red;
+      }
+      &--blue {
+        background-color: $color-blue;
+      }
+      &--grey {
+        background-color: $color-grey;
+      }
+    }
+  }
+}

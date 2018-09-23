@@ -1,3 +1,17 @@
 {
-  "extends": "airbnb-base"
+  "extends": "airbnb",
+  "parser": "babel-eslint",
+  "env": {
+    "browser": true,
+    "node": true,
+    "es6": true
+  },
+  "rules": {
+    "no-console": "off",
+    "react/jsx-filename-extension": "off",
+    "react/jsx-one-expression-per-line": "off",
+    "no-case-declarations": "off",
+    "no-param-reassign": "off",
+    "consistent-return": "off"
+  }
 }

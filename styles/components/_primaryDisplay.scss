@@ -1,0 +1,36 @@
+.primary-display {
+  border: 1px solid #d8dfec;
+  box-shadow: 1px 1px 20px 0px rgba(0,0,0,0.08);
+  border-radius: 4px;
+  &__header {
+    height: 12%;
+    border-bottom: 1px solid $color-border;
+    background-color: rgba(189, 189, 189, 0.08);
+
+
+    display: flex;
+
+    &-tab {
+      color: $color-secondary;
+      padding-left: 3rem;
+      width: 20%;
+      border-right: 1px solid $color-border;
+      cursor: pointer;
+
+      display: flex;
+      align-items: center;
+
+      &--active {
+        border-bottom: 1px solid orange;
+
+        & > span {
+          color: $color-primary;
+        }
+      }
+    }
+  }
+
+  &__body {
+    height: 88%;
+  }
+}

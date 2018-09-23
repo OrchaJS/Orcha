@@ -1,9 +1,6 @@
-const { ipcRenderer } = require('electron');
-
 class Florender {
-  constructor(flow, element) {
+  constructor(flow) {
     this.flow = flow;
-    this.element = element;
     this.store = {};
     this.output = null;
 
@@ -32,20 +29,22 @@ class Florender {
     this.getColor = (func, color) => `
       class ${func} ${color}`;
 
-    this.initializeFunc = ({ States: states }) => Object.keys(states).reduce(
-      (accum, key) => `
-          ${accum + key}`,
-      '',
-    );
+    this.initializeNodesInWorkFlow = ({ States: states }) => Object.keys(states).reduce((accum, key) => accum + this.initializeNode(key), '');
+
+    this.initializeNode = nodeId => `
+      ${nodeId}
+      click ${nodeId} handleOnClickNode`;
 
     this.executeTask = (state, currFunc, end) => {
       let output = '';
 
       if (state.End) {
-        output += this.drawLine(currFunc, end, '-.->');
+        output += this.drawLine(currFunc, end);
       } else {
-        output += this.drawLine(currFunc, state.Next, '-->');
+        output += this.drawLine(currFunc, state.Next);
       }
+
+      output += this.initializeNode(currFunc);
 
       return output;
     };
@@ -56,7 +55,7 @@ class Florender {
       subgraph ${funcName}`;
 
       branches.forEach((workFlow) => {
-        output += this.initializeFunc(workFlow);
+        output += this.initializeNodesInWorkFlow(workFlow);
       });
 
       output += `
@@ -89,6 +88,7 @@ class Florender {
       const state = states[startAt];
 
       let output = '';
+
       if (end === 'End') {
         if (state.Type === 'Parallel') {
           state.Branches.forEach((branch) => {
@@ -100,6 +100,7 @@ class Florender {
       }
 
       output += this.executeStateObject(states, state, startAt, undefined, end);
+
       return output;
     };
   }
@@ -114,12 +115,29 @@ class Florender {
     return this.output + this.getColors();
   }
 
-  setColor(func, color) {
+  setColor(func, status) {
+    let color;
+
+    switch (status) {
+      case 'complete':
+        color = 'green';
+        break;
+      case 'fail':
+        color = 'red';
+        break;
+      case 'running':
+        color = 'blue';
+        break;
+      case 'cancel':
+        color = 'grey';
+        break;
+      default:
+        throw new Error('UNKNOWN STATUS');
+    }
+
     this.store[func].color = color;
 
-    const output = this.startWorkFlow();
-
-    return output;
+    return this.startWorkFlow();
   }
 
   getColors() {
@@ -139,9 +157,7 @@ class Florender {
 
     this.store[currFunc] = { color: null };
 
-    const type = state.Type;
-
-    switch (type) {
+    switch (state.Type) {
       case 'Task':
         output += this.executeTask(state, currFunc, end);
         break;
@@ -155,9 +171,7 @@ class Florender {
         throw new Error('WTF');
     }
 
-    const nextState = states[state.Next];
-
-    return this.executeStateObject(states, nextState, state.Next, output);
+    return this.executeStateObject(states, states[state.Next], state.Next, output);
   }
 }
 
