@@ -9,6 +9,9 @@
   "rules": {
     "no-console": "off",
     "react/jsx-filename-extension": "off",
-    "react/jsx-one-expression-per-line": "off"
+    "react/jsx-one-expression-per-line": "off",
+    "no-case-declarations": "off",
+    "no-param-reassign": "off",
+    "consistent-return": "off"
   }
 }
