@@ -1,9 +1,6 @@
 const AWS = require('aws-sdk');
 const fs = require('fs');
 
-const maxInvocations = 20;
-const globalWorkflowState = {};
-
 class Orcha {
   constructor(workflowObject, workflowInput, statusUpdateCallback, errorCallback,
     endOfExecutionCallback, awsLambdaController) {

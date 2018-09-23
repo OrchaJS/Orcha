@@ -10,19 +10,18 @@ const mockedLambdas = {
   addOneToArrayNumbers,
   squareArrayNumbers,
   sumArrays,
-  squareRootArrayNumbers
+  squareRootArrayNumbers,
 };
 
-const jsonWorkflowPaths = path.join(__dirname, './test/json_workflow_file_test_cases/');
+const jsonWorkflowPaths = path.join(__dirname, './json_workflow_file_test_cases/');
 const workflowPaths = {
-  simple: path.join(jsonWorkflowPaths, 'simple.json'),
-  parallel: path.join(jsonWorkflowPaths, 'parallel.json'),
-  choice: path.join(jsonWorkflowPaths, 'parallelChoice.json'),
-  simpleRetry: path.join(jsonWorkflowPaths, 'simpleRetry.json')
+  simple: path.join(jsonWorkflowPaths, 'SequentialExec.json'),
+  parallel: path.join(jsonWorkflowPaths, 'parallelExec.json'),
+  choice: path.join(jsonWorkflowPaths, 'parallelChoiceExec.json'),
+  simpleRetry: path.join(jsonWorkflowPaths, 'simpleRetry.json'),
 };
 
 AWS.mock('Lambda', 'invoke', (params, callback) => {
-  const parsedPayloadToLambda = JSON.parse(params.Payload);
   const lambdaReturnValue = mockedLambdas[params.FunctionName](JSON.parse(params.Payload));
   const objectReturnedFromLambda = { Payload: JSON.stringify(lambdaReturnValue) };
   // when we invoke mock lambda, return null for err and return value for data
@@ -33,18 +32,28 @@ AWS.mock('Lambda', 'invoke', (params, callback) => {
 test('simple workflow', () => {
   const testCase = { array: [1, 3, 4] };
   const testWorkflow = addOneToArrayNumbers(squareArrayNumbers(addOneToArrayNumbers(testCase)));
-  orcha.executeWorkflow(workflowPaths.simple, testCase, 'us-east-1', (data) => {
-    expect(data).toEqual(testWorkflow);
-    expect(data).toEqual({ array: [5, 17, 26] });
+  orcha.executeWorkflow({
+    region: 'us-east-1',
+    jsonPath: workflowPaths.simple,
+    workflowInput: testCase,
+    endOfExecutionCallback: (returnObject) => {
+      expect(returnObject.output).toEqual(testWorkflow);
+      expect(returnObject.output).toEqual({ array: [5, 17, 26] });
+    },
   });
 });
 
 test('parallel workflow', () => {
   const testCase = { array: [1, 3, 4] };
-  const testWorkflow = sumArrays([addOneToArrayNumbers(testCase), squareArrayNumbers(testCase)])
-  orcha.executeWorkflow(workflowPaths.parallel, testCase, 'us-east-1', (data) => {
-    expect(data).toEqual(testWorkflow);
-    expect(data).toEqual({ array: [3, 13, 21], sum: 37 });
+  const testWorkflow = sumArrays([addOneToArrayNumbers(testCase), squareArrayNumbers(testCase)]);
+  orcha.executeWorkflow({
+    region: 'us-east-1',
+    jsonPath: workflowPaths.parallel,
+    workflowInput: testCase,
+    endOfExecutionCallback: (returnObject) => {
+      expect(returnObject.output).toEqual(testWorkflow);
+      expect(returnObject.output).toEqual({ array: [3, 13, 21], sum: 37 });
+    },
   });
 });
 
@@ -52,9 +61,14 @@ test('choice workflow first choice chosen', () => {
   const testCase = { array: [1, 2, 3] };
   const beforeChoiceWorkflow = sumArrays([addOneToArrayNumbers(testCase), squareArrayNumbers(testCase)]);
   const afterChoiceWorkflow = addOneToArrayNumbers(beforeChoiceWorkflow);
-  orcha.executeWorkflow(workflowPaths.choice, testCase, 'us-east-1', (data) => {
-    expect(data).toEqual(afterChoiceWorkflow);
-    expect(data).toEqual({ array: [4, 8, 14] });
+  orcha.executeWorkflow({
+    region: 'us-east-1',
+    jsonPath: workflowPaths.choice,
+    workflowInput: testCase,
+    endOfExecutionCallback: (returnObject) => {
+      expect(returnObject.output).toEqual(afterChoiceWorkflow);
+      expect(returnObject.output).toEqual({ array: [4, 8, 14] });
+    },
   });
 });
 
@@ -62,9 +76,14 @@ test('choice workflow second choice chosen', () => {
   const testCase = { array: [0, 1, 2] };
   const beforeChoiceWorkflow = sumArrays([addOneToArrayNumbers(testCase), squareArrayNumbers(testCase)]);
   const afterChoiceWorkflow = addOneToArrayNumbers(addOneToArrayNumbers(beforeChoiceWorkflow));
-  orcha.executeWorkflow(workflowPaths.choice, testCase, 'us-east-1', (data) => {
-    expect(data).toEqual(afterChoiceWorkflow);
-    expect(data).toEqual({ array: [3, 5, 9] });
+  orcha.executeWorkflow({
+    region: 'us-east-1',
+    jsonPath: workflowPaths.choice,
+    workflowInput: testCase,
+    endOfExecutionCallback: (returnObject) => {
+      expect(returnObject.output).toEqual(afterChoiceWorkflow);
+      expect(returnObject.output).toEqual({ array: [3, 5, 9] });
+    },
   });
 });
 
@@ -72,9 +91,14 @@ test('choice workflow default choice chosen', () => {
   const testCase = { array: [2, 3, 4] };
   const beforeChoiceWorkflow = sumArrays([addOneToArrayNumbers(testCase), squareArrayNumbers(testCase)]);
   const afterChoiceWorkflow = addOneToArrayNumbers(addOneToArrayNumbers(addOneToArrayNumbers(beforeChoiceWorkflow)));
-  orcha.executeWorkflow(workflowPaths.choice, testCase, 'us-east-1', (data) => {
-    expect(data).toEqual(afterChoiceWorkflow);
-    expect(data).toEqual({ array: [10, 16, 24] });
+  orcha.executeWorkflow({
+    region: 'us-east-1',
+    jsonPath: workflowPaths.choice,
+    workflowInput: testCase,
+    endOfExecutionCallback: (returnObject) => {
+      expect(returnObject.output).toEqual(afterChoiceWorkflow);
+      expect(returnObject.output).toEqual({ array: [10, 16, 24] });
+    },
   });
 });
 
