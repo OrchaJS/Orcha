@@ -6,9 +6,9 @@
       "Next": "sumArrays",
       "Branches": [
         {
-          "StartAt": "addOneLol",
+          "StartAt": "addOnePara",
           "States": {
-            "addOneLol": {
+            "addOnePara": {
               "Type": "Task",
               "LambdaToInvoke": "addOneToArrayNumbers",
               "End": true
