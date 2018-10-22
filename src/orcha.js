@@ -3,7 +3,7 @@ const fs = require('fs');
 
 class Orcha {
   constructor(workflowObject, workflowInput, statusUpdateCallback, errorCallback,
-    endOfExecutionCallback, awsLambdaController) {
+    endOfExecutionCallback, awsLambdaController, region) {
     this.maxInvocations = 100;
     this.currentInvocations = 0;
     this.workflowObject = workflowObject;
@@ -15,6 +15,7 @@ class Orcha {
     this.endOfExecutionCallback = endOfExecutionCallback;
     this.endOfExecutionCallback.finalFunction = true;
     this.awsLambdaController = awsLambdaController;
+    this.region = region;
     this.sendStatusUpdate({
       Type: 'ExecutionStarted',
     });
@@ -433,8 +434,8 @@ class Orcha {
       };
       this.statusId += 1;
       if (statusObject.Lambda) {
-        callbackObject.lambdaURL = `https://console.aws.amazon.com/lambda/home?region=${globalWorkflowState.region}#/functions/${statusObject.Lambda}`;
-        callbackObject.cloudURL = `https://console.aws.amazon.com/cloudwatch/home?region=${globalWorkflowState.region}#logStream:group=/aws/lambda/${statusObject.Lambda}`;
+        callbackObject.lambdaURL = `https://console.aws.amazon.com/lambda/home?region=${this.region}#/functions/${statusObject.Lambda}`;
+        callbackObject.cloudURL = `https://console.aws.amazon.com/cloudwatch/home?region=${this.region}#logStream:group=/aws/lambda/${statusObject.Lambda}`;
       }
       this.statusUpdateCallback(statusObject);
     }
@@ -480,7 +481,7 @@ function executeWorkflow(configObject) {
   AWS.config.update({ region });
   const awsLambdaController = new AWS.Lambda();
   const orchaController = new Orcha(workflowObject, workflowInput, statusUpdateCallback,
-    errorCallback, endOfExecutionCallback, awsLambdaController);
+    errorCallback, endOfExecutionCallback, awsLambdaController, region);
   orchaController.runWorkflow();
 }
 
